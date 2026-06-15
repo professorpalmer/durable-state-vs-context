@@ -1,5 +1,9 @@
 # State, Not Tokens: Repository-Scale Agent Reasoning Is Bound by State Architecture
 
+**Cary Palmer**  
+Independent Researcher, Dallas, TX  
+<https://github.com/professorpalmer> · <https://www.linkedin.com/in/cary-palmer-a30557175/>
+
 **Preprint. All reported numbers are produced by the machine-checkable oracle and are
 reproducible from the public code and data: <https://github.com/professorpalmer/durable-state-vs-context>
 and <https://huggingface.co/datasets/CaryPalmer/durable-vs-context-trials>.**

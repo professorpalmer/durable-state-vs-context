@@ -17,7 +17,7 @@ papers that already have an arXiv ID — so **arXiv is the gate**.
 
 **Title:** State, Not Tokens: Repository-Scale Agent Reasoning Is Bound by State Architecture
 
-**Authors:** *(arXiv requires real author names — pseudonyms violate policy. Set your real name; GitHub/HF handle is `professorpalmer`.)*
+**Authors:** Cary Palmer (Independent Researcher, Dallas, TX). GitHub `professorpalmer`, HF `CaryPalmer`.
 
 **Primary category:** `cs.SE` (Software Engineering)
 **Cross-list:** `cs.AI`, `cs.LG`
