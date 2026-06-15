@@ -95,3 +95,10 @@ Targets are pinned to exact commits (`*.pin.json`). Each trial provisions a fres
 checkout, runs the arm, and is scored by the same oracle. Re-scoring an existing
 tree (`harness/rescore.py`) is deterministic and cheap, decoupled from the
 expensive agent conversions.
+
+## License
+
+- **Code** (`harness/`, `oracle/`, build scripts): MIT — see [`LICENSE`](LICENSE).
+- **Paper, figures, and trial records** (`paper/`, `figures/`, `results/`, the
+  [Hugging Face dataset](https://huggingface.co/datasets/CaryPalmer/durable-vs-context-trials)):
+  Creative Commons Attribution 4.0 (CC BY 4.0).
