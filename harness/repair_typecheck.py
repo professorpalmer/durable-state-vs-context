@@ -62,6 +62,11 @@ def repair(trial_dir: Path, sub: str, state_dir: Path, timeout: int, max_workers
     ts_to_js = {f[:-3] + ".ts": f for f in sel["scope"]}
     converted = {f for f in sel["scope"] if (tree / (f[:-3] + ".ts")).is_file()}
 
+    # Make tsc see the real state: drop residual .js that would shadow a .ts, and
+    # ensure node_modules is usable (a symlinked tree still needs a resolvable tsc).
+    R._normalize_tree(tree, sel["scope"])
+    R._sh(["npm", "install", "--no-audit", "--no-fund"], tree, timeout=900)
+
     iters = []
     t0 = time.time()
     for it in range(max_iters):
