@@ -129,18 +129,28 @@ deliberately honest, narrower claim.
 | after targeted repair | n/a (no seam) | **0 errors, CLEAN** (4.3 min) |
 
 ### 4.2 Durable accumulation > stateless retrieval (the clean divergence)
-| scope | durable | stateless-RAG |
-| --- | --- | --- |
-| express (7) | PASS (DRR 0.75) | PASS (DRR 0.25) |
-| jsdom-S (8) | PASS (seeds 1,2) | **FAIL** (seeds 0,1,2 — 0/3) |
-| jsdom-M (24) | `[live]` | `[live]` |
-| jsdom-L (60) | PASS | **FAIL** (typecheck) |
-| jsdom-XL (120) | PASS (typecheck, 0 hatches)¹ | — |
+| scope | durable (first pass) | durable (after targeted repair) | stateless-RAG |
+| --- | --- | --- | --- |
+| express (7) | PASS (DRR 0.75) | — | PASS (DRR 0.25) |
+| jsdom-S (8) | **PASS** (seeds 1,2: 2/2) | — | **FAIL** (seeds 0,1,2: 0/3) |
+| jsdom-M (24) | **PASS** (seeds 1,2: 2/2) | — | **FAIL** (seeds 1,2: 0/2) |
+| jsdom-L (60) | localized gaps (s1: 1 err) | **CLEAN** (2 calls, 1.7 min) | **FAIL** (structural conflicts) |
+| jsdom-XL (120) | **CLEAN** (typecheck, 0 hatches)¹ | — | — |
 
-Same scope, same model, same tools — only **accumulation** differs. RAG fails at
-*every* small-scope seed (0/3 at S) and at L; durable passes. ¹At XL the durable
-runtime gate is confounded by jsdom's own build system (§6); we report the
-unconfounded static axis (`tsc` clean, 0 hatches, all 120 converted).
+Same scope, same model, same tools — only **accumulation** differs. The honest
+shape: at small scope (S, M) durable's *first pass* is clean while RAG fails at
+**every** seed (S 0/3, M 0/2); at larger scope (L) durable's first pass leaves a
+*few localized* type gaps that **targeted repair clears to CLEAN cheaply**
+(L seed 1: one `TS2353`, 2 repair calls, 101 s), whereas RAG fails by *structural
+cross-file conflicts* that have no cheap local fix. ¹At XL the durable runtime gate
+is confounded by jsdom's own build system (§6); we report the unconfounded static
+axis (`tsc` clean, 0 hatches, all 120 converted).
+
+The mechanism distinction is the point: RAG and durable both fail "by type errors"
+at scale, but **durable's are localized and repairable** (a consequence of a
+consistent shared tree) while **RAG's are structural conflicts** (a consequence of
+zero shared state). Accumulation does not just lower the error count — it changes
+the *kind* of error into one decomposition can cheaply repair.
 
 ### 4.3 Failure taxonomy: three architectures, three distinct failure modes
 The mechanism is clearest in *how* each arm fails (TS error codes across all
