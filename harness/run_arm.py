@@ -170,20 +170,32 @@ def arm_monolith(base: Path, scope: list[str], runs_dir: Path, state_dir: Path,
 
 def _convert_files_parallel(seed_for: Any, files: list[str], runs_dir: Path, state_dir: Path,
                             model: Optional[str], timeout: int, max_workers: int,
-                            converted_deps_of: Any, pristine: bool) -> dict[str, dict]:
+                            converted_deps_of: Any, pristine: bool, retries: int = 2) -> dict[str, dict]:
     """Convert a set of files in parallel; each on its own lightcopy. Returns
-    {file: {ts, step}}. `seed_for(file)` yields the tree to copy for that file."""
+    {file: {ts, step}}. `seed_for(file)` yields the tree to copy for that file.
+
+    A worker that yields no `.ts` (transient timeout/error) is retried up to
+    `retries` times. For the decomposed arms this is the cheap, targeted recovery
+    that durable state makes possible — re-run only the failed unit, not the scope."""
     out: dict[str, dict] = {}
 
     def task(f: str) -> tuple[str, dict]:
-        wk = runs_dir / ("wk_" + f.replace("/", "_"))
-        _lightcopy(seed_for(f), wk)
-        res = _run_worker(_prompt_one_file(f, converted_deps_of(f), pristine), wk, state_dir, model, timeout)
-        ts = _harvest(wk, f)
-        shutil.rmtree(wk, ignore_errors=True)
-        return f, {"ts": ts, "step": ArmStep(
+        attempts = 0
+        last = {"rc": None, "duration_s": 0.0, "error": ""}
+        total_s = 0.0
+        ts = None
+        while attempts <= retries and ts is None:
+            wk = runs_dir / ("wk_" + f.replace("/", "_"))
+            _lightcopy(seed_for(f), wk)
+            last = _run_worker(_prompt_one_file(f, converted_deps_of(f), pristine), wk, state_dir, model, timeout)
+            ts = _harvest(wk, f)
+            shutil.rmtree(wk, ignore_errors=True)
+            total_s += last["duration_s"]
+            attempts += 1
+        return f, {"ts": ts, "attempts": attempts, "step": ArmStep(
             label=f, scope=[f], status="done" if ts else "error",
-            duration_s=res["duration_s"], model=model, note=res["error"])}
+            duration_s=round(total_s, 1), model=model,
+            note=(last["error"] + (f" (attempts={attempts})" if attempts > 1 else "")).strip())}
 
     with ThreadPoolExecutor(max_workers=max_workers) as ex:
         for fut in as_completed([ex.submit(task, f) for f in files]):
