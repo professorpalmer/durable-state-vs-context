@@ -41,7 +41,7 @@ that isolate which capability actually matters.
 The dominant response to repository-scale forgetting in coding agents has been to
 enlarge the context window: 8k gave way to 128k gave way to 1M tokens, on the
 premise that whole-repo reasoning is gated by how much of the repository fits in
-the prompt at once [cite: long-context LMs]. This paper argues that for repository-
+the prompt at once (Liu et al., 2023; Packer et al., 2023). This paper argues that for repository-
 scale work the premise is a *misdiagnosis*. A modern agentic worker does not need
 to hold the working set in its prompt — it navigates the filesystem on demand,
 reading modules as it needs them — and as a result it scales much further than the
@@ -94,40 +94,39 @@ capabilities, and the controlled design isolates them.
 ## 2. Related work
 
 **Long-context language models.** A large body of work extends usable context length
-and studies its limits [cite: long-context LMs]. "Lost-in-the-middle" effects show
-that simply enlarging the window does not yield uniform access to its contents
-[cite: Liu et al., lost-in-the-middle], and context-compaction / summarization methods
-try to fit more useful signal into a bounded window. Our results are complementary but
-make a different point: for repository-scale coding the agent need not carry the working
-set in-window at all, so the relevant axis is state organization, not window size.
+and studies its limits. "Lost-in-the-middle" effects show that simply enlarging the
+window does not yield uniform access to its contents (Liu et al., 2023), and
+context-management methods such as MemGPT page information between tiers to fit more
+useful signal into a bounded window (Packer et al., 2023). Our results are complementary
+but make a different point: for repository-scale coding the agent need not carry the
+working set in-window at all — MemGPT still treats the *window* as the substrate to be
+fed, whereas we treat durable committed state as the primary substrate and the window as
+incidental — so the relevant axis is state organization, not window size.
 
-**Retrieval-augmented generation and code-graph retrieval.** RAG and structured
-code-graph retrieval supply agents with relevant context on demand [cite: RAG; code-graph
-retrieval for agents]. We include a stateless-RAG arm with exactly this capability —
-per-file workers with code-graph retrieval — and show that retrieval alone is
-insufficient when work is decomposed: without shared, accumulated state, independent
-workers emit conflicting declarations that do not compile. The contribution is precisely
-to separate *retrieval* (finding context) from *accumulation* (persisting and reusing
-discoveries consistently).
+**Retrieval-augmented generation and code-graph retrieval.** RAG supplies models with
+relevant context on demand (Lewis et al., 2020), and repository-level methods such as
+RepoCoder iterate retrieval and generation over code (Zhang et al., 2023). We include a
+stateless-RAG arm with exactly this capability — per-file workers with code-graph
+retrieval — and show that retrieval alone is insufficient when work is decomposed:
+without shared, accumulated state, independent workers emit conflicting declarations that
+do not compile. The contribution is precisely to separate *retrieval* (finding context)
+from *accumulation* (persisting and reusing discoveries consistently).
 
 **Agent memory, scratchpads, and external stores.** Prior work equips agents with
-memories, scratchpads, and external stores to persist information across steps
-[cite: agent memory / scratchpads]. We treat durable state not as an auxiliary memory
-but as the *primary computational substrate*: discoveries are committed system objects
-on a shared evolving tree, which yields conflict-free decomposition, resumable
-checkpoints, and zero-cost re-query — properties we measure rather than assume.
+memories and reflective stores to persist information across steps — e.g. Reflexion's
+episodic memory of self-critiques (Shinn et al., 2023) and MemGPT's OS-style memory
+paging (Packer et al., 2023). We treat durable state not as an auxiliary memory but as the
+*primary computational substrate*: discoveries are committed system objects on a shared
+evolving tree, which yields conflict-free decomposition, resumable checkpoints, and
+zero-cost re-query — properties we measure rather than assume.
 
-**Repository-scale agent benchmarks.** SWE-bench-style benchmarks evaluate agents on
-real repository tasks [cite: SWE-bench]. We differ on three counts: (i) the independent
-variable is *state architecture* with everything else held constant, not end-to-end
-agent capability; (ii) the oracle is *unforgeable by construction* (strict typecheck +
-immutable tests + mandatory file replacement + zero escape hatches), eliminating partial
-credit and hollow passes; and (iii) the scaling variable is *repository scope* drawn by
-deterministic BFS over the dependency graph, so we argue over repo size rather than token
-budgets.
-
-*(Citation markers above are concept-level placeholders for a bibliography pass; no
-specific quantitative claims are attributed to these works.)*
+**Repository-scale agent benchmarks.** SWE-bench evaluates agents on real GitHub issues
+(Jimenez et al., 2023). We differ on three counts: (i) the independent variable is *state
+architecture* with everything else held constant, not end-to-end agent capability; (ii)
+the oracle is *unforgeable by construction* (strict typecheck + immutable tests + mandatory
+file replacement + zero escape hatches), eliminating partial credit and hollow passes; and
+(iii) the scaling variable is *repository scope* drawn by deterministic BFS over the
+dependency graph, so we argue over repo size rather than token budgets.
 
 ## 3. Experimental design
 
@@ -413,3 +412,23 @@ reconcile), while durable accumulation fails by neither, additionally buying
 interruption-resumable consistent checkpoints. The win comes from treating
 discoveries as durable, consistent, reusable system objects — *state is an asset,
 not a prompt*.
+
+## References
+
+- Lewis, P., Perez, E., Piktus, A., Petroni, F., Karpukhin, V., Goyal, N., Küttler, H.,
+  Lewis, M., Yih, W., Rocktäschel, T., Riedel, S., & Kiela, D. (2020). *Retrieval-Augmented
+  Generation for Knowledge-Intensive NLP Tasks.* NeurIPS 2020. arXiv:2005.11401.
+- Liu, N. F., Lin, K., Hewitt, J., Paranjape, A., Bevilacqua, M., Petroni, F., & Liang, P.
+  (2023). *Lost in the Middle: How Language Models Use Long Contexts.* TACL 2024.
+  arXiv:2307.03172.
+- Zhang, F., Chen, B., Zhang, Y., Keung, J., Liu, J., Zan, D., Mao, Y., Lou, J.-G., & Chen, W.
+  (2023). *RepoCoder: Repository-Level Code Completion Through Iterative Retrieval and
+  Generation.* EMNLP 2023. arXiv:2303.12570.
+- Shinn, N., Cassano, F., Berman, E., Gopinath, A., Narasimhan, K., & Yao, S. (2023).
+  *Reflexion: Language Agents with Verbal Reinforcement Learning.* NeurIPS 2023.
+  arXiv:2303.11366.
+- Packer, C., Wooders, S., Lin, K., Fang, V., Patil, S. G., Stoica, I., & Gonzalez, J. E.
+  (2023). *MemGPT: Towards LLMs as Operating Systems.* arXiv:2310.08560.
+- Jimenez, C. E., Yang, J., Wettig, A., Yao, S., Pei, K., Press, O., & Narasimhan, K. (2023).
+  *SWE-bench: Can Language Models Resolve Real-World GitHub Issues?* ICLR 2024.
+  arXiv:2310.06770.
