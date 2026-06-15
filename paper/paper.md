@@ -38,19 +38,96 @@ that isolate which capability actually matters.
 
 ## 1. Introduction
 
-- The misdiagnosis: context-length arms race vs. state architecture.
-- The database analogy: processes became coordinators over durable state
-  (indexes, caches, query planners) rather than containers of state.
-- The reviewer's question we must answer: *what does durable state buy that
-  retrieval alone does not?* Our answer is mechanistic, not rhetorical:
-  conflict-free parallel decomposition + resumable checkpoints, measured.
+The dominant response to repository-scale forgetting in coding agents has been to
+enlarge the context window: 8k gave way to 128k gave way to 1M tokens, on the
+premise that whole-repo reasoning is gated by how much of the repository fits in
+the prompt at once [cite: long-context LMs]. This paper argues that for repository-
+scale work the premise is a *misdiagnosis*. A modern agentic worker does not need
+to hold the working set in its prompt — it navigates the filesystem on demand,
+reading modules as it needs them — and as a result it scales much further than the
+naive context-length thesis predicts. Where it eventually fails, it fails by
+*capacity* (it cannot maintain global correctness over the hardest module), not by
+running out of window. The binding constraint is **how state is organized and
+flows**, not nominal context length.
+
+The analogy is databases. Scaling was not solved by giving every process unlimited
+RAM; it was solved by making the process a *coordinator over durable state* —
+indexes, caches, query planners, materialized views — rather than the *container* of
+state. A query planner does not keep the whole table in memory; it reasons over
+durable structures and pulls what it needs. We claim repository-scale agents are
+undergoing the same transition: the model should be a navigator and reasoner over a
+durable, evolving world model of the repository, not a vessel that must hold the
+entire working set in a transient prompt and re-derive it every turn.
+
+The reviewer's sharpest question for any such claim is: *what does durable state buy
+that retrieval alone does not?* "Isn't this just RAG over a code graph?" Our answer
+is mechanistic and measured, not rhetorical. We hold model, tools, scaffold, and a
+hardened oracle constant and vary a single axis — how state flows between bounded
+workers — across three arms: a single-context **monolith**, a **durable** arm that
+accumulates each completed dependency layer as a committed artifact on a shared
+evolving tree, and a **stateless-RAG** arm whose workers retrieve context but never
+see each other's results. RAG *finds* information and throws it away each turn;
+durable state *accumulates* discoveries, lets work decompose across workers without
+re-derivation, and makes prior findings consistent and reusable. Those are different
+capabilities, and the controlled design isolates them.
+
+**Contributions.**
+1. A controlled study design for repository-scale agents that varies *state
+   architecture* with model/tools/oracle held constant, over an *unforgeable* oracle
+   (strict `tsc`, immutable tests, mandatory `.js`→`.ts` replacement, zero escape
+   hatches) and an independent variable of *repository scope*, not prompt tokens.
+2. A refutation of the naive context-length thesis (the single context scales cleanly
+   to 240 interdependent modules) and its reframing: the single context *does* crack
+   at full-repo scale, but by capacity, not window — sharpening the contribution to
+   "state architecture, not context length."
+3. A mechanistic account of *why* durable accumulation beats stateless retrieval: a
+   failure taxonomy in which the three architectures fail three distinct ways — RAG by
+   *conflict*, monolith by *capacity*, durable by neither — with `TS2451` redeclaration
+   conflicts appearing *only* in RAG.
+4. Two structural properties unavailable to any single transcript: interruption-
+   resumable consistent checkpoints, and zero-marginal-cost re-query of materialized
+   discoveries (a database read, not an LLM call).
+5. An honest localization of the one place durable does *not* win — wall-clock at full
+   scale — to a *platform* concurrency ceiling (K≈10–11 sessions), not to state
+   architecture, with the parallel headroom shown to *grow* with repo size.
 
 ## 2. Related work
 
-- Long-context LMs; lost-in-the-middle; context compaction.
-- RAG / code-graph retrieval for coding agents.
-- Agent memory / scratchpads / external stores.
-- SWE-bench-style repo tasks (we differ: controlled state axis, unforgeable oracle).
+**Long-context language models.** A large body of work extends usable context length
+and studies its limits [cite: long-context LMs]. "Lost-in-the-middle" effects show
+that simply enlarging the window does not yield uniform access to its contents
+[cite: Liu et al., lost-in-the-middle], and context-compaction / summarization methods
+try to fit more useful signal into a bounded window. Our results are complementary but
+make a different point: for repository-scale coding the agent need not carry the working
+set in-window at all, so the relevant axis is state organization, not window size.
+
+**Retrieval-augmented generation and code-graph retrieval.** RAG and structured
+code-graph retrieval supply agents with relevant context on demand [cite: RAG; code-graph
+retrieval for agents]. We include a stateless-RAG arm with exactly this capability —
+per-file workers with code-graph retrieval — and show that retrieval alone is
+insufficient when work is decomposed: without shared, accumulated state, independent
+workers emit conflicting declarations that do not compile. The contribution is precisely
+to separate *retrieval* (finding context) from *accumulation* (persisting and reusing
+discoveries consistently).
+
+**Agent memory, scratchpads, and external stores.** Prior work equips agents with
+memories, scratchpads, and external stores to persist information across steps
+[cite: agent memory / scratchpads]. We treat durable state not as an auxiliary memory
+but as the *primary computational substrate*: discoveries are committed system objects
+on a shared evolving tree, which yields conflict-free decomposition, resumable
+checkpoints, and zero-cost re-query — properties we measure rather than assume.
+
+**Repository-scale agent benchmarks.** SWE-bench-style benchmarks evaluate agents on
+real repository tasks [cite: SWE-bench]. We differ on three counts: (i) the independent
+variable is *state architecture* with everything else held constant, not end-to-end
+agent capability; (ii) the oracle is *unforgeable by construction* (strict typecheck +
+immutable tests + mandatory file replacement + zero escape hatches), eliminating partial
+credit and hollow passes; and (iii) the scaling variable is *repository scope* drawn by
+deterministic BFS over the dependency graph, so we argue over repo size rather than token
+budgets.
+
+*(Citation markers above are concept-level placeholders for a bibliography pass; no
+specific quantitative claims are attributed to these works.)*
 
 ## 3. Experimental design
 
