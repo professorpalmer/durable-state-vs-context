@@ -141,13 +141,20 @@ surfaces as the failure taxonomy (§4.3) rather than DRR. We report both honestl
 rather than cherry-picking the favorable metric.
 
 ### 4.5 Resumability (H4): the structural durable edge
-At a hard mid-run interruption: durable preserves every committed layer (a
-*consistent* checkpoint that type-checks) and resumes to an oracle PASS having
-only redone the in-flight layer; the monolith's interrupted tree is an
-inconsistent partial that fails the oracle — 0 known-good recoverable modules.
-Measured: durable committed 17 modules across 6 layers before interrupt and
-resumed from that committed state; the monolith loses its entire single shot.
-Work-preserved-at-crash: durable `[live]%` vs monolith 0%.
+At a hard interruption after an *equal* wall budget (~1200 s) on jsdom-M(24):
+
+| arm | work preserved @ crash | partial tree passes oracle? | recoverable on restart |
+| --- | --- | --- | --- |
+| durable | **70.8%** (17/24 committed) | layers type-check (consistent) | resumes → **oracle PASS** (24/24) |
+| monolith | **0%** (0/24 committed) | no (inconsistent partial) | 0 modules; full redo |
+
+Durable committed 17 modules across 6 dependency layers before the interrupt;
+resuming from that on-disk committed state completed the remaining 7 and the tree
+passed the full oracle. The monolith persists nothing until one terminal write, so
+its interrupted 24-file partial tree is inconsistent, fails the oracle, and yields
+zero known-good modules — the entire single shot is lost. This is a *structural*
+property of single-transcript execution, not a tuning artifact: there is no
+mechanism by which a monolith can expose a consistent intermediate checkpoint.
 
 ## 5. Discussion
 - What durable state buys (measured): conflict-free decomposition; resumable

@@ -7,7 +7,8 @@ _Last updated: 2026-06-15 (overnight autonomous run). Multi-seed at S/M; single 
 1. **The naive "single context breaks at repository scale" thesis did NOT hold up to 240 modules.** A single agentic worker (`monolith`) cleanly migrated **240 interdependent jsdom modules** (strict typecheck + tests + 0 hatches). Reason: a modern agentic coder *navigates the filesystem on demand* — it is already a reasoner over external state, not a prompt that crams the working set. "Context length" was not the binding constraint at moderate scale.
 2. **But the single context DOES crack at full-repository scale.** At the **full jsdom `lib/` tree (364 modules)** the monolith converts everything and gets tests green with 0 hatches, but **fails `typecheck_strict` with 16 residual errors** (TS2571 "object is of type 'unknown'", TS2322 assignability), concentrated in the hardest module (`XMLHttpRequest-impl`). It used the *safe* escape (`unknown`, not `any`) but ran out of capacity to globally narrow types. This is the first honest degradation of the one-shot architecture — a quality (type-correctness) failure, not a conversion failure.
 3. **Durable accumulation beats stateless retrieval (RAG).** When work IS decomposed into parallel workers, the stateless-RAG arm — whose workers cannot see each other's discoveries — produces code that does not even compile (duplicate block-scoped declarations across independently-converted files; `typecheck_strict` FAIL at **every** S seed 0/3 and at L), while the durable arm (shared evolving tree) does not (PASS at S, L, XL). Same scope, same model, same tools — only **accumulation** differs. This is the clean, mechanism-grounded divergence.
-4. **The defensible contribution is narrower than "state beats context":** it is *conflict-free parallel decomposition via accumulated state* + *resumability and targeted recovery* — dimensions where the monolith is structurally incapable, not merely slower.
+4. **Resumability is a structural durable edge (H4, measured).** At a hard interrupt after an equal wall budget (~1200s) on jsdom-M(24): the **durable arm preserved 70.8% of work** (17/24 modules as consistent, type-checking committed checkpoints) and **resumed to a full oracle PASS**; the **monolith preserved 0%** — its 24-file partial tree fails the oracle, nothing was committed, and 0 modules are recoverable on restart. The monolith cannot expose intermediate consistent state by construction.
+5. **The defensible contribution is narrower than "state beats context":** it is *conflict-free parallel decomposition via accumulated state* + *resumable consistent checkpoints* — dimensions where the monolith is structurally incapable, not merely slower.
 
 ## Primary outcome = `typecheck_strict` (static, unconfounded)
 
@@ -19,7 +20,7 @@ The headline correctness axis is **strict static type-checking** (`tsc --noEmit`
 | --- | --- | --- | --- | --- |
 | express | 7   | PASS | PASS | PASS |
 | jsdom-S | 8   | PASS (s1,s2) | PASS (s1,s2) | **FAIL** (s0,s1,s2 — TS2451 redeclaration) |
-| jsdom-M | 24  | PASS (s1) | _running_ | _queued_ |
+| jsdom-M | 24  | PASS (s1) | PASS (s1) | **FAIL** (s1 — typecheck) |
 | jsdom-L | 60  | PASS | PASS | **FAIL** (typecheck) |
 | jsdom-XL| 120 | PASS | **PASS** typecheck (0 err); runtime confounded¹ | — |
 | jsdom-XXL| 240 | PASS | — | — |
@@ -81,7 +82,8 @@ Conversions are decoupled from scoring; all trees are re-scored by the current o
 
 - **Capstone:** durable at FULL jsdom (364) — does decompose+accumulate+iterative-repair reach a
   clean `typecheck_strict` where the one-shot monolith leaves 16 errors? (running)
-- Multi-seed S/M durable-vs-RAG for error bars on the core divergence. (running)
-- **Resumability (H4):** interrupt monolith vs durable mid-run; the monolith loses its single
-  shot, durable resumes from committed layers. (running)
-- Failure taxonomy + figures from `harness/analyze.py`.
+- Multi-seed S/M durable-vs-RAG for error bars on the core divergence. (running: M seed 2)
+- **Resumability (H4): DONE** — durable 70.8% preserved + resumed→PASS vs monolith 0%
+  (`results/resume_exp.jsonl`, `figures/resumability.png`).
+- Failure taxonomy + figures from `harness/analyze.py`. (`figures/`: drr_vs_scope,
+  monolith_scaling, resumability)
