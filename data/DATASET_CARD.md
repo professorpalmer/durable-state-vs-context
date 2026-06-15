@@ -15,16 +15,6 @@ task_categories:
 configs:
 - config_name: trials
   data_files: trials.jsonl
-- config_name: concurrency_c8
-  data_files: concurrency_probe_c8.jsonl
-- config_name: concurrency_c12
-  data_files: concurrency_probe_c12.jsonl
-- config_name: concurrency_c16
-  data_files: concurrency_probe_c16.jsonl
-- config_name: concurrency_c24
-  data_files: concurrency_probe_c24.jsonl
-- config_name: concurrency_c32
-  data_files: concurrency_probe_c32.jsonl
 ---
 
 # Durable State vs Context — Repository-Scale Agent Trials
@@ -71,15 +61,20 @@ graph: jsdom S/M/L/XL/XXL/FULL = 8/24/60/120/240/364 modules), not prompt tokens
 | `peak_scope_in_one_context` | largest module set held in a single context |
 | `wall_clock_s` | end-to-end wall-clock seconds |
 
-## `concurrency_probe_c{8,12,16,24,32}.jsonl`
+## `concurrency_sweep_aggregate.json` + `concurrency_sweep_profiles/`
 
-Per-worker timing events from a clean **5-point concurrency sweep** on full-scale (364-module)
-durable runs, used to localize the **platform session cap**. Event stream: `base_build_start`,
-`layer_start`, `worker_start`, `worker_end` (with `rc` and `worker_s`). A worker with `rc==0`
-(or a `harvest_end` with `got_ts`) produced a diff; throttled sessions return fast (<20 s) with
-no diff. Measured success rates: C=8 91%, C=12 96%, C=16 70%, C=24 ~26% (two samples: 29%, 23%),
-C=32 34%. The over-cap rate is **stochastic** — C=24 reproducibly fell below C=32 — so we report
-an effective session cap K≈10–12 rather than a clean `min(1, K/C)` law.
+A **replicated concurrency sweep** on full-scale (364-module) durable runs, used to localize the
+**platform session cap**. Every run uses an identical protocol — a fixed 240 s steady-state
+window — with n=5–10 replicates per concurrency C ∈ {8,12,16,24,32} and quality gates
+(`base_build_start==1`, full window, ≥8 window workers; 34 admitted, 1 rejected). The aggregate
+JSON has per-C mean ± 95% CI; the profiles dir has the raw per-worker event stream
+(`base_build_*`, `layer_start`, `worker_start`, `worker_end` with `rc`/`worker_s`, `harvest_end`
+with `got_ts`) for every replicate `c{C}_r{rep}.jsonl`.
+
+Result (mean ± 95% CI): **C=8 97% ±5.7, C=12 99% ±2.0, C=16 66% ±2.7, C=24 28% ±4.3,
+C=32 19% ±8.1** — a cleanly monotone collapse through a sharp knee, effective admission cap
+**K≈10–12** (C=12 K_eff=11.9, C=16 K_eff=10.5). Above the cap the rate falls below a `min(1,K/C)`
+reference (retry churn inflates the denominator).
 
 ## Headline result
 
