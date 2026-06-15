@@ -17,19 +17,26 @@ The headline correctness axis is **strict static type-checking** (`tsc --noEmit`
 
 ## Outcome table (hardened oracle)
 
+Verdicts on the **primary static axis** (`typecheck_strict` + `escape_hatches`); ✓=clean,
+✗=fails. "post-repair" = clean after targeted iterative repair (worker calls / wall noted).
+
 | target | scope | monolith | durable | stateless-RAG |
 | --- | --- | --- | --- | --- |
-| express | 7   | PASS | PASS | PASS |
-| jsdom-S | 8   | PASS (s1,s2) | PASS (s1,s2) | **FAIL** (s0,s1,s2 — TS2451 redeclaration) |
-| jsdom-M | 24  | PASS (s1) | PASS (s1) | **FAIL** (s1 — typecheck) |
-| jsdom-L | 60  | PASS | PASS | **FAIL** (typecheck) |
-| jsdom-XL| 120 | PASS | **PASS** typecheck (0 err); runtime confounded¹ | — |
-| jsdom-XXL| 240 | PASS | — | — |
-| jsdom-FULL| 364 | **FAIL** typecheck (16 err) | _capstone running_ | — |
+| express | 7   | ✓ | ✓ | ✓ |
+| jsdom-S | 8   | ✓ (s1,s2) | ✓ (s1,s2) | ✗ 0/3 (s0,s1,s2 — TS2451 redeclaration) |
+| jsdom-M | 24  | ✓ (s1,s2) | ✓ (s1,s2) | ✗ 0/2 (typecheck) |
+| jsdom-L | 60  | ✓ | ✓ all seeds (s1: post-repair 2 calls/101s; s2: raw clean) | ✗ 0/3 (TS2451 conflicts) |
+| jsdom-XL| 120 | ✓ | ✓ (0 err, 0 hatches, 120 converted)¹ | — |
+| jsdom-XXL| 240 | ✓ | — | — |
+| jsdom-FULL| 364 | **✗ (16 errors, no repair seam)** | **✓ post-repair (raw 5 → 4 calls/258s → 0)**¹ | — |
 
-¹ XL durable: `tsc --noEmit` clean (0 errors), 0 hatches, all 120 converted. `conversion_complete`/`tests_api` fail only because converting jsdom's `living/helpers/namespaces.js` breaks jsdom's own `prepare:convert-idl` codegen, which `require()`s that file by literal `.js` path. Build-system coupling artifact, not a durable-arm defect (see Threats).
+¹ Runtime gate (`tests_api`) confounded when scope includes `namespaces.js` (see Threats);
+static axis is clean. At FULL the monolith fails the static axis outright (16 errors) and has
+no decomposition seam to repair; durable reaches a verified-clean `tsc --strict --noEmit`.
 
-S/M/L passes are honest on *all* gates: conversion-complete, strict typecheck, full test suite, 0 escape hatches.
+S/M/L durable+monolith passes are honest on *all* gates (conversion-complete, strict typecheck,
+full test suite, 0 hatches) except where the `namespaces.js` runtime confound applies, in which
+case the static axis is reported. RAG **never** reaches a clean typecheck on jsdom at any scale.
 
 ## Mechanism — Discovery Reuse Rate (DRR)
 

@@ -116,6 +116,11 @@ TS_MEANING = {
     "2571": "object is of type 'unknown' (un-narrowed)",
     "2717": "subsequent property decls must have same type",
     "2739": "type missing required properties",
+    "2353": "object literal may only specify known properties",
+    "2393": "duplicate function implementation (cross-file)",
+    "2497": "module default-import needs esModuleInterop",
+    "2687": "all declarations of X must have identical modifiers",
+    "18048": "value is possibly 'undefined'",
     "7006": "parameter implicitly has 'any' type",
     "7016": "could not find a declaration file for module",
 }
