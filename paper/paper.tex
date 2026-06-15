@@ -156,7 +156,7 @@ The dominant response to repository-scale forgetting in coding agents
 has been to enlarge the context window: 8k gave way to 128k gave way to
 1M tokens, on the premise that whole-repo reasoning is gated by how much
 of the repository fits in the prompt at once (Liu et al., 2023; Packer
-et al., 2023). This paper argues that for repository- scale work the
+et al., 2023). This paper argues that for repository-scale work the
 premise is a \emph{misdiagnosis}. A modern agentic worker does not need
 to hold the working set in its prompt --- it navigates the filesystem on
 demand, reading modules as it needs them --- and as a result it scales
@@ -192,28 +192,41 @@ decompose across workers without re-derivation, and makes prior findings
 consistent and reusable. Those are different capabilities, and the
 controlled design isolates them.
 
-\textbf{Contributions.} 1. A controlled study design for
-repository-scale agents that varies \emph{state architecture} with
-model/tools/oracle held constant, over an \emph{unforgeable} oracle
-(strict \texttt{tsc}, immutable tests, mandatory
-\texttt{.js}→\texttt{.ts} replacement, zero escape hatches) and an
-independent variable of \emph{repository scope}, not prompt tokens. 2. A
-refutation of the naive context-length thesis (the single context scales
-cleanly to 240 interdependent modules) and its reframing: the single
-context \emph{does} crack at full-repo scale, but by capacity, not
-window --- sharpening the contribution to ``state architecture, not
-context length.'' 3. A mechanistic account of \emph{why} durable
-accumulation beats stateless retrieval: a failure taxonomy in which the
-three architectures fail three distinct ways --- RAG by \emph{conflict},
-monolith by \emph{capacity}, durable by neither --- with \texttt{TS2451}
-redeclaration conflicts appearing \emph{only} in RAG. 4. Two structural
-properties unavailable to any single transcript: interruption- resumable
-consistent checkpoints, and zero-marginal-cost re-query of materialized
-discoveries (a database read, not an LLM call). 5. An honest
-localization of the one place durable does \emph{not} win --- wall-clock
-at full scale --- to a \emph{platform} concurrency ceiling (K≈10--12
-sessions), not to state architecture, with the parallel headroom shown
-to \emph{grow} with repo size.
+\textbf{Contributions.}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  A controlled study design for repository-scale agents that varies
+  \emph{state architecture} with model/tools/oracle held constant, over
+  an \emph{unforgeable} oracle (strict \texttt{tsc}, immutable tests,
+  mandatory \texttt{.js}→\texttt{.ts} replacement, zero escape hatches)
+  and an independent variable of \emph{repository scope}, not prompt
+  tokens.
+\item
+  A refutation of the naive context-length thesis (the single context
+  scales cleanly to 240 interdependent modules) and its reframing: the
+  single context \emph{does} crack at full-repo scale, but by capacity,
+  not window --- sharpening the contribution to ``state architecture,
+  not context length.''
+\item
+  A mechanistic account of \emph{why} durable accumulation beats
+  stateless retrieval: a failure taxonomy in which the three
+  architectures fail three distinct ways --- RAG by \emph{conflict},
+  monolith by \emph{capacity}, durable by neither --- with
+  \texttt{TS2451} redeclaration conflicts appearing \emph{only} in RAG.
+\item
+  Two structural properties unavailable to any single transcript:
+  interruption-resumable consistent checkpoints, and zero-marginal-cost
+  re-query of materialized discoveries (a database read, not an LLM
+  call).
+\item
+  An honest localization of the one place durable does \emph{not} win
+  --- wall-clock at full scale --- to a \emph{platform} concurrency
+  ceiling (K≈10--12 sessions), not to state architecture, with the
+  parallel headroom shown to \emph{grow} with repo size.
+\end{enumerate}
 
 \subsection{2. Related work}\label{related-work}
 
@@ -904,21 +917,30 @@ claim)}\label{future-work-orchestration-track-distinct-from-the-state-architectu
 
 These close the §4.8 speed gap and are properties of the
 \emph{scheduler/serving layer}, not of durable state; we list them so
-the speed result is not mistaken for a ceiling on the architecture: -
-\textbf{Adaptive admission control.} Cap dispatch near the observed
-session ceiling instead of launching \texttt{max\_workers} that mostly
-fast-fail; treat a burst of sub-N-second no-edit returns as backpressure
-and throttle, eliminating wasted API calls beyond K. -
-\textbf{Throttle-vs-failure classification.} A sub-N-second
-\texttt{require\_diff} failure should re-queue as backpressure, not
-count against a task's quality budget (no retry storms). -
-\textbf{Dataflow scheduling.} Release a module the instant its
-dependencies commit, rather than at full-layer barriers --- the
-theoretical critical-path floor is 0.55 h \textless{} the monolith's
-0.83 h, so dataflow + a higher session allowance is the path to a
-\emph{speed} win, not just parity. - \textbf{Non-code reasoning-artifact
-tasks} to test the zero-cost re-query advantage (§4.7) where the
-discovery does not live on the filesystem.
+the speed result is not mistaken for a ceiling on the architecture:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Adaptive admission control.} Cap dispatch near the observed
+  session ceiling instead of launching \texttt{max\_workers} that mostly
+  fast-fail; treat a burst of sub-N-second no-edit returns as
+  backpressure and throttle, eliminating wasted API calls beyond K.
+\item
+  \textbf{Throttle-vs-failure classification.} A sub-N-second
+  \texttt{require\_diff} failure should re-queue as backpressure, not
+  count against a task's quality budget (no retry storms).
+\item
+  \textbf{Dataflow scheduling.} Release a module the instant its
+  dependencies commit, rather than at full-layer barriers --- the
+  theoretical critical-path floor is 0.55 h \textless{} the monolith's
+  0.83 h, so dataflow + a higher session allowance is the path to a
+  \emph{speed} win, not just parity.
+\item
+  \textbf{Non-code reasoning-artifact tasks} to test the zero-cost
+  re-query advantage (§4.7) where the discovery does not live on the
+  filesystem.
+\end{itemize}
 
 \subsection{7. Conclusion}\label{conclusion}
 

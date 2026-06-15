@@ -50,8 +50,8 @@ that isolate which capability actually matters.
 The dominant response to repository-scale forgetting in coding agents has been to
 enlarge the context window: 8k gave way to 128k gave way to 1M tokens, on the
 premise that whole-repo reasoning is gated by how much of the repository fits in
-the prompt at once (Liu et al., 2023; Packer et al., 2023). This paper argues that for repository-
-scale work the premise is a *misdiagnosis*. A modern agentic worker does not need
+the prompt at once (Liu et al., 2023; Packer et al., 2023). This paper argues that for
+repository-scale work the premise is a *misdiagnosis*. A modern agentic worker does not need
 to hold the working set in its prompt — it navigates the filesystem on demand,
 reading modules as it needs them — and as a result it scales much further than the
 naive context-length thesis predicts. Where it eventually fails, it fails by
@@ -81,6 +81,7 @@ re-derivation, and makes prior findings consistent and reusable. Those are diffe
 capabilities, and the controlled design isolates them.
 
 **Contributions.**
+
 1. A controlled study design for repository-scale agents that varies *state
    architecture* with model/tools/oracle held constant, over an *unforgeable* oracle
    (strict `tsc`, immutable tests, mandatory `.js`→`.ts` replacement, zero escape
@@ -93,8 +94,8 @@ capabilities, and the controlled design isolates them.
    failure taxonomy in which the three architectures fail three distinct ways — RAG by
    *conflict*, monolith by *capacity*, durable by neither — with `TS2451` redeclaration
    conflicts appearing *only* in RAG.
-4. Two structural properties unavailable to any single transcript: interruption-
-   resumable consistent checkpoints, and zero-marginal-cost re-query of materialized
+4. Two structural properties unavailable to any single transcript:
+   interruption-resumable consistent checkpoints, and zero-marginal-cost re-query of materialized
    discoveries (a database read, not an LLM call).
 5. An honest localization of the one place durable does *not* win — wall-clock at full
    scale — to a *platform* concurrency ceiling (K≈10–12 sessions), not to state
@@ -444,6 +445,7 @@ problem (§6 future work), not a property of durable state.
 ## 6.1 Future work (orchestration track — distinct from the state-architecture claim)
 These close the §4.8 speed gap and are properties of the *scheduler/serving layer*, not of
 durable state; we list them so the speed result is not mistaken for a ceiling on the architecture:
+
 - **Adaptive admission control.** Cap dispatch near the observed session ceiling instead of
   launching `max_workers` that mostly fast-fail; treat a burst of sub-N-second no-edit returns
   as backpressure and throttle, eliminating wasted API calls beyond K.
