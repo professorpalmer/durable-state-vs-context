@@ -117,13 +117,16 @@ taxonomy shows three architectures fail in three distinct ways --- RAG
 by \emph{conflict}, monolith by \emph{capacity}, durable by neither. We
 also measure the limit of the parallelism this enables: the dependency
 critical path falls to \textbf{4.6\% of total work} at full scale (so
-headroom \emph{grows} with repo size), but \emph{usable} concurrency is
-capped at an effective \textbf{K≈10--12} simultaneous agent sessions by
-the serving platform (a replicated n=5--10 sweep with 95\% CIs; success
-collapses monotonically above the cap), not by durable state --- an
-orchestration constraint we localize and leave as future work. The
-contribution is a reframing --- \emph{state is an asset, not a prompt}
---- with controls that isolate which capability actually matters.
+headroom \emph{grows} with repo size), but on the Cursor backend
+\emph{usable} concurrency is capped at an effective \textbf{K≈10--12}
+simultaneous agent sessions by the serving platform (a replicated
+n=5--10 sweep with 95\% CIs; success collapses monotonically above the
+cap). A second backend (Claude Code) sustains \textbf{100\% to C=32}
+under the same orchestrator, confirming the cap is a property of the
+serving platform, not of durable state --- an orchestration constraint
+we localize rather than a limit of the architecture. The contribution is
+a reframing --- \emph{state is an asset, not a prompt} --- with controls
+that isolate which capability actually matters.
 
 \subsection{1. Introduction}\label{introduction}
 
@@ -283,6 +286,19 @@ context; escape-hatch count; \textbf{Discovery Reuse Rate (DRR)} =
 fraction of dependent in-scope modules whose \texttt{.ts} consumes a
 type exported by an already-converted in-scope dependency (a persisted
 discovery); failure taxonomy.
+
+\subsubsection{3.5 Serving platform (held constant; one
+control)}\label{serving-platform-held-constant-one-control}
+
+All arms run on a single orchestrator --- Puppetmaster, dispatching
+\textbf{Cursor agent workers} --- so the serving platform is held
+constant across arms and is \emph{not} the varied axis. Model routing is
+likewise fixed. The \textbf{one} exception is §4.8, where we introduce a
+\emph{second} backend (\textbf{Claude Code}, Anthropic API) under the
+\emph{same} orchestrator purely as a \textbf{control}: it isolates
+whether the concurrency ceiling we observe is a property of durable
+state (it is not) or of the serving platform (it is). Every other result
+in the paper is on the Cursor substrate.
 
 \subsection{4. Results}\label{results}
 
@@ -694,13 +710,26 @@ measurement artifact of mixed stop-rules, not a property of the system.)
 We attribute the cap to the \textbf{Cursor API/SDK, not the
 orchestrator}: Puppetmaster spawned, leased, and retried every worker
 correctly, and durable state + retry \emph{absorbed} the throttle (the
-run still converges). The consequence: at the practical ceiling, durable
-wall ≈ work/\textasciitilde11 ≈ 1.1 h vs the monolith's 0.83 h ---
-durable is \textasciitilde1.3× \emph{slower} on wall-clock while being
-the only arm that reaches a clean strict typecheck at full scale. The
-21.6× theoretical headroom is real but only \textasciitilde K of it is
-spendable at once today; closing that gap is an \emph{orchestration}
-problem (§6 future work), not a property of durable state.
+run still converges). \textbf{We confirm this with a second-backend
+control} (Fig. \texttt{concurrency\_backends}): holding the orchestrator
+and durable state fixed and swapping only the worker backend from Cursor
+agents to \textbf{Claude Code} (Anthropic API), a concurrency probe that
+launches exactly C workers simultaneously sustains \textbf{100\% success
+at every C ∈ \{4,8,16,24,32\}} (n=3 each; 252 workers; 0 fast-fails) ---
+including at C=16/24/32, where the Cursor backend collapses to
+66\%/28\%/19\%. The contrast is the result: identical orchestration +
+durable state, one backend caps and the other does not, so the cap is a
+property of the \textbf{serving platform}, not of durable state or the
+orchestrator. (We keep both arms precisely because the
+platform-specificity claim \emph{is} this contrast; a single-backend
+curve could not establish it.) The consequence: at the practical
+ceiling, durable wall ≈ work/\textasciitilde11 ≈ 1.1 h vs the monolith's
+0.83 h --- durable is \textasciitilde1.3× \emph{slower} on wall-clock
+while being the only arm that reaches a clean strict typecheck at full
+scale. The 21.6× theoretical headroom is real but only \textasciitilde K
+of it is spendable at once today; closing that gap is an
+\emph{orchestration} problem (§6 future work), not a property of durable
+state.
 
 \subsection{5. Discussion}\label{discussion}
 
@@ -728,10 +757,14 @@ problem (§6 future work), not a property of durable state.
 \item
   \textbf{The speed gap is an orchestration ceiling, not a
   state-architecture one.} Durable's \textasciitilde1.3× wall-clock
-  penalty at full scale (§4.8) is set by a platform session cap
-  (K≈10--12), not by accumulation; the theoretical 21.6× headroom says
-  the \emph{architecture} scales, and realizing it is an engineering
-  problem on the serving/scheduling side (§6).
+  penalty at full scale (§4.8) is set by a \emph{platform} session cap
+  (K≈10--12 on Cursor), not by accumulation. We demonstrate this
+  directly: the same orchestrator and durable state on a \textbf{second
+  backend (Claude Code) sustains 100\% to C=32} where Cursor collapses
+  (Fig. \texttt{concurrency\_backends}). The theoretical 21.6× headroom
+  says the \emph{architecture} scales; realizing it is an engineering
+  problem on the serving/scheduling side (§6), and the backend choice
+  alone moves the ceiling.
 \end{itemize}
 
 \subsection{6. Threats to validity}\label{threats-to-validity}
@@ -769,23 +802,26 @@ problem (§6 future work), not a property of durable state.
   wall-clock, worker count, and DRR as the cost axes instead of token
   deltas.
 \item
-  Single platform (Puppetmaster cursor workers); model routing held
-  constant.
+  Main results run on a single platform (Puppetmaster Cursor workers)
+  with model routing held constant; §4.8 adds a Claude Code backend as a
+  control for the concurrency claim only.
 \item
-  \textbf{Platform concurrency ceiling (§4.8).} Usable parallelism is
-  capped at an effective K≈10--12 concurrent agent sessions by the
-  serving API, so the measured wall-clock does not yet realize the 21.6×
-  dataflow headroom. This bounds the \emph{speed} comparison (durable
-  \textasciitilde1.3× the monolith at full scale) but not the
-  \emph{correctness}, \emph{resumability}, or \emph{re-query} results,
-  none of which depend on concurrency. We ran a \textbf{replicated}
-  sweep at C∈\{8,12,16,24,32\} (n=5--10 per point, uniform 240 s window,
-  every run contamination-checked and quality-gated for a complete
-  window) and report mean ± 95\% CI; the collapse is monotone and
-  tightly resolved. A second, independent serving backend --- to confirm
-  the cap is platform-specific rather than fundamental --- remains the
-  key open validation (it needs a non-Cursor agent backend; left as
-  future work).
+  \textbf{Platform concurrency ceiling (§4.8).} On the Cursor backend,
+  usable parallelism is capped at an effective K≈10--12 concurrent agent
+  sessions by the serving API, so the measured Cursor wall-clock does
+  not yet realize the 21.6× dataflow headroom. This bounds the
+  \emph{speed} comparison (Cursor durable \textasciitilde1.3× the
+  monolith at full scale) but not the \emph{correctness},
+  \emph{resumability}, or \emph{re-query} results, none of which depend
+  on concurrency. We ran a \textbf{replicated} sweep at
+  C∈\{8,12,16,24,32\} (n=5--10 per point, uniform 240 s window, every
+  run contamination-checked and quality-gated for a complete window),
+  mean ± 95\% CI; the collapse is monotone and tightly resolved.
+  Crucially, a \textbf{second backend (Claude Code / Anthropic) under
+  the same orchestrator sustains 100\% to C=32} (Fig.
+  \texttt{concurrency\_backends}), so the cap is platform-specific, not
+  fundamental --- it is an orchestration/serving constraint, not a
+  property of durable state.
 \end{itemize}
 
 \subsection{6.1 Future work (orchestration track --- distinct from the

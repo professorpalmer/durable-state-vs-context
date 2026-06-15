@@ -161,6 +161,15 @@ escape-hatch count; **Discovery Reuse Rate (DRR)** = fraction of dependent
 in-scope modules whose `.ts` consumes a type exported by an already-converted
 in-scope dependency (a persisted discovery); failure taxonomy.
 
+### 3.5 Serving platform (held constant; one control)
+All arms run on a single orchestrator — Puppetmaster, dispatching **Cursor agent
+workers** — so the serving platform is held constant across arms and is *not* the
+varied axis. Model routing is likewise fixed. The **one** exception is §4.8, where we
+introduce a *second* backend (**Claude Code**, Anthropic API) under the *same*
+orchestrator purely as a **control**: it isolates whether the concurrency ceiling we
+observe is a property of durable state (it is not) or of the serving platform (it is).
+Every other result in the paper is on the Cursor substrate.
+
 ## 4. Results
 
 ### 4.1 The naive context thesis fails at moderate scale — but the single context *does* crack at full-repo scale
@@ -344,13 +353,15 @@ throttled sessions inflates the denominator, so the collapsed regime is *steeper
 uniform-window protocol showed it was a measurement artifact of mixed stop-rules, not a property
 of the system.) We attribute the cap to the **Cursor API/SDK, not the orchestrator**: Puppetmaster
 spawned, leased, and retried every worker correctly, and durable state + retry *absorbed* the
-throttle (the run still converges). **We confirm this with a second serving backend**
-(Fig. `concurrency_backends`): running the *same* orchestrator with Claude Code workers
-(Anthropic API) in place of Cursor agents, a concurrency probe that launches exactly C workers
-simultaneously sustains **100% success at every C ∈ {4,8,16,24,32}** (n=3 each; 252 workers; 0
-fast-fails) — including at C=16/24/32, where the Cursor backend collapses to 66%/28%/19%. The
-concurrency cap is therefore a property of the **serving platform**, not of durable state or the
-orchestrator: swap the backend and it vanishes within the tested range. The consequence: at the practical ceiling, durable wall ≈
+throttle (the run still converges). **We confirm this with a second-backend control**
+(Fig. `concurrency_backends`): holding the orchestrator and durable state fixed and swapping only
+the worker backend from Cursor agents to **Claude Code** (Anthropic API), a concurrency probe that
+launches exactly C workers simultaneously sustains **100% success at every C ∈ {4,8,16,24,32}**
+(n=3 each; 252 workers; 0 fast-fails) — including at C=16/24/32, where the Cursor backend collapses
+to 66%/28%/19%. The contrast is the result: identical orchestration + durable state, one backend
+caps and the other does not, so the cap is a property of the **serving platform**, not of durable
+state or the orchestrator. (We keep both arms precisely because the platform-specificity claim *is*
+this contrast; a single-backend curve could not establish it.) The consequence: at the practical ceiling, durable wall ≈
 work/~11 ≈ 1.1 h vs the monolith's 0.83 h — durable is ~1.3× *slower* on wall-clock while being
 the only arm that reaches a clean strict typecheck at full scale. The 21.6× theoretical headroom
 is real but only ~K of it is spendable at once today; closing that gap is an *orchestration*
@@ -398,7 +409,8 @@ problem (§6 future work), not a property of durable state.
   consistency; the hatch fix flipped mono-240 from a false FAIL to its true PASS.
 - Cursor-SDK token counts are unreliable (implausibly low); we report wall-clock,
   worker count, and DRR as the cost axes instead of token deltas.
-- Single platform (Puppetmaster cursor workers); model routing held constant.
+- Main results run on a single platform (Puppetmaster Cursor workers) with model routing
+  held constant; §4.8 adds a Claude Code backend as a control for the concurrency claim only.
 - **Platform concurrency ceiling (§4.8).** On the Cursor backend, usable parallelism is
   capped at an effective K≈10–12 concurrent agent sessions by the serving API, so the
   measured Cursor wall-clock does not yet realize the 21.6× dataflow headroom. This bounds the

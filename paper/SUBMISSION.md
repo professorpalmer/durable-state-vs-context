@@ -20,34 +20,35 @@ papers that already have an arXiv ID — so **arXiv is the gate**.
 **Primary category:** `cs.SE` (Software Engineering)
 **Cross-list:** `cs.AI`, `cs.LG`
 
-**Comments field:** `9 pages, 2 figures. Code, data, and reproduction harness: https://github.com/professorpalmer/durable-state-vs-context`
+**Comments field:** `9 pages, 3 figures. Code, data, and reproduction harness: https://github.com/professorpalmer/durable-state-vs-context ; trial records + concurrency sweeps: https://huggingface.co/datasets/CaryPalmer/durable-vs-context-trials`
 
 **License (recommend):** CC BY 4.0 — maximizes HF visibility and reuse.
 
-**Abstract (arXiv field; trim to <1920 chars if the form rejects it):**
+**Abstract (arXiv field; ~1900 chars, fits the form):**
 
 > The agent community has largely treated repository-scale forgetting as a context-window
-> problem: bigger windows (8k to 1M tokens) are expected to yield better whole-repo
-> reasoning. We argue this is a misdiagnosis. Using a hard, machine-checkable task — strict
-> JavaScript-to-TypeScript migration of real OSS repositories under an unforgeable oracle
-> (strict tsc, immutable test suites, mandatory .js-to-.ts replacement, zero
-> type-escape-hatches) — we vary a single axis: how state flows between bounded workers.
-> Three arms hold model, tools, scaffold, and oracle constant: a single-context monolith, a
-> durable arm that accumulates each completed dependency layer as a committed artifact on a
-> shared evolving tree, and a stateless-RAG arm whose per-file workers retrieve context but
-> never see each other's results. We find: (1) a single modern agentic worker already scales
-> much further than the naive context thesis predicts — cleanly migrating up to 240
-> interdependent modules by navigating the filesystem on demand — but it does crack at the
-> full 364-module tree, by capacity (residual strict-type errors on the hardest module), not
-> by window overflow; (2) when work is decomposed for parallelism, durable accumulation
-> strictly dominates stateless retrieval — RAG's independent workers emit code that does not
-> compile (TS2451 redeclaration conflicts appear only in RAG); and (3) durable state confers
-> two structural properties no single transcript can: interruption-resumable consistent
-> checkpoints, and zero-marginal-cost re-query of any materialized discovery (a database
-> read, not an LLM call). A failure taxonomy shows three architectures fail three distinct
-> ways: RAG by conflict, monolith by capacity, durable by neither. The contribution is a
-> reframing — state is an asset, not a prompt — with controls that isolate which capability
-> actually matters.
+> problem: bigger windows (8k to 1M) are expected to yield better whole-repo reasoning. We
+> argue this is a misdiagnosis. Using a hard, machine-checkable task — strict
+> JS-to-TS migration of real OSS repositories under an unforgeable oracle
+> (strict tsc, immutable tests, mandatory .js-to-.ts replacement, zero escape-hatches) — we
+> vary a single axis: how state flows between bounded workers. Three arms hold model, tools,
+> and oracle constant: a single-context monolith; a durable arm that accumulates each completed
+> dependency layer as a committed artifact on a shared evolving tree; and a stateless-RAG arm
+> whose per-file workers retrieve context but never see each other's results. We find: (1) a
+> single modern agentic worker already scales far past the naive context thesis — cleanly
+> migrating up to 240 interdependent modules by navigating the filesystem on demand — but it
+> cracks at the full 364-module tree by capacity (residual strict-type errors), not window
+> overflow; (2) when work is decomposed for parallelism, durable
+> accumulation strictly dominates stateless retrieval — RAG's independent workers emit code
+> that does not compile (TS2451 redeclaration conflicts appear only in RAG); and (3) durable
+> state confers two properties no single transcript can: interruption-resumable consistent
+> checkpoints, and zero-cost re-query of a materialized discovery (a database read, not
+> an LLM call). The three fail distinctly: RAG by conflict, monolith by capacity, durable by
+> neither. Finally, the only cap on realized parallel speed is the platform,
+> not state: a replicated sweep caps usable Cursor concurrency at K~10-12 sessions, yet the same
+> orchestrator on a second backend (Claude Code) sustains 100% at 32-way — the cap is
+> platform-specific, not architectural. The contribution is a reframing: state is an asset, not
+> a prompt.
 
 ## 2. Submit to arXiv
 1. Create / log in at https://arxiv.org with the email you'll use for HF claiming (**use the same email**).
@@ -65,8 +66,9 @@ papers that already have an arXiv ID — so **arXiv is the gate**.
 2. **Claim authorship:** click your name in the author list → "claim authorship". The Hub
    auto-matches on email (must match arXiv); an admin verifies (can take a few days).
 3. **Link artifacts** (this is what makes the page look credible and rank): add the arXiv/HF
-   paper URL to the README of the GitHub repo and to the HF Dataset card (see `data/` dataset)
-   so they back-link to the paper page.
+   paper URL to the GitHub README and to the live HF dataset
+   (`https://huggingface.co/datasets/CaryPalmer/durable-vs-context-trials`) so they back-link to
+   the paper page. The repo README and dataset card already link *out* to each other.
 
 ## 4. Honest reality check on "getting on the feed"
 Indexing is automatic; *trending* on Daily Papers depends on community upvotes, which we can't
