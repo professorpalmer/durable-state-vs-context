@@ -102,6 +102,11 @@ TS_MEANING = {
     "2322": "type not assignable",
     "2339": "property does not exist on type",
     "2345": "argument type not assignable",
+    "2430": "interface incorrectly extends interface",
+    "2551": "property does not exist (no near-match)",
+    "2571": "object is of type 'unknown' (un-narrowed)",
+    "2717": "subsequent property decls must have same type",
+    "2739": "type missing required properties",
     "7006": "parameter implicitly has 'any' type",
     "7016": "could not find a declaration file for module",
 }
