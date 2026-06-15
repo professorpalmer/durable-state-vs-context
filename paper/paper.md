@@ -329,7 +329,7 @@ total work as the DAG broadens (max layer width 5 → 78 across the sweep):
 So ~95% of full-scale work is parallelizable (Fig. `headroom_vs_scale`). But a soak that
 raised requested concurrency on the *same* full-scale durable run found a hard limit that is
 **not** durable state's: worker success follows `min(1, K/C)` with **K≈10–11** (clean single
-runs: C=16 → 68%, C=32 → 33%; Fig. `concurrency_ceiling`). Beyond ~K concurrent sessions the
+runs: C=16 → 70% [44/63], C=32 → 34% [51/152]; Fig. `concurrency_ceiling`). Beyond ~K concurrent sessions the
 serving platform throttles excess workers into fast (<20 s vs ~90–170 s) no-edit returns. We
 attribute this to the **Cursor API/SDK session cap, not the orchestrator**: Puppetmaster
 spawned, leased, and retried all 32 correctly, and durable state + retry *absorbed* the

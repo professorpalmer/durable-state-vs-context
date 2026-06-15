@@ -96,8 +96,8 @@ We probed durable FULL(364) at increasing worker concurrency on the frozen engin
 | concurrency | success rate | implied session cap K | failure mode |
 | --- | --- | --- | --- |
 | C=4 (capstone) | ~100% | — | none |
-| C=16 | 68% (40/59) | ~10.9 | fast (<20s) no-diff no-ops |
-| C=32 | 33% (49/150) | ~10.6 | fast (<20s) no-diff no-ops |
+| C=16 | 70% (44/63) | ~11.2 | fast (<20s) no-diff no-ops |
+| C=32 | 34% (51/152) | ~10.7 | fast (<20s) no-diff no-ops |
 
 Success follows `min(1, K/C)` with **K ≈ 10–11**: the Cursor API/SDK sustains ~10–11 concurrent
 agent sessions; excess workers are throttled into fast no-edit returns (median ~5–11s vs ~90–170s
