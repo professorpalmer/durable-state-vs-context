@@ -14,6 +14,7 @@ Writes:
 from __future__ import annotations
 
 import json
+import re
 import statistics as stats
 from collections import defaultdict
 from pathlib import Path
@@ -28,6 +29,20 @@ def _load(name: str) -> list[dict]:
     if not fp.exists():
         return []
     return [json.loads(l) for l in fp.read_text().splitlines() if l.strip()]
+
+
+def _dedup_canonical(recs: list[dict]) -> list[dict]:
+    """Tolerate legacy hand-curated records (no 'stratum') alongside reproducible
+    ingested records. Key on (display/target, scope_size, arm, seed); prefer the
+    ingested record (has 'stratum'). Read-only, so it never races a live batch
+    writing canonical.jsonl."""
+    best: dict[tuple, dict] = {}
+    for r in recs:
+        key = (r.get("display") or r.get("target"), r.get("scope_size"), r.get("arm"), r.get("seed", 0))
+        cur = best.get(key)
+        if cur is None or ("stratum" in r and "stratum" not in cur):
+            best[key] = r
+    return list(best.values())
 
 
 def _cell(rec: dict) -> str:
@@ -74,6 +89,49 @@ def drr_table(recs: list[dict]) -> str:
         dd, rr = d.get("durable"), d.get("rag")
         diff = round(dd - rr, 4) if isinstance(dd, (int, float)) and isinstance(rr, (int, float)) else "—"
         rows.append(f"| {disp} | {d.get('monolith','—')} | {d.get('durable','—')} | {d.get('rag','—')} | {diff} |")
+    return "\n".join(rows)
+
+
+TS_CODE = re.compile(r"TS(\d{3,5})")
+TS_MEANING = {
+    "2451": "cannot redeclare block-scoped variable (cross-file conflict)",
+    "2300": "duplicate identifier",
+    "2304": "cannot find name (missing/unreferenced type)",
+    "2305": "module has no exported member",
+    "2307": "cannot find module",
+    "2322": "type not assignable",
+    "2339": "property does not exist on type",
+    "2345": "argument type not assignable",
+    "7006": "parameter implicitly has 'any' type",
+    "7016": "could not find a declaration file for module",
+}
+
+
+def failure_taxonomy(recs: list[dict]) -> str:
+    fails = [r for r in recs if not r.get("oracle_ok")]
+    if not fails:
+        return "_no failures recorded_"
+    rows = ["| trial | arm | failed gates | TS error codes (top) |", "| --- | --- | --- | --- |"]
+    code_tally: dict[str, int] = defaultdict(int)
+    by_arm_codes: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    for r in fails:
+        codes: dict[str, int] = defaultdict(int)
+        for g in r.get("failed_gate_detail", []):
+            for c in TS_CODE.findall(g.get("tail", "") or ""):
+                codes[c] += 1
+                code_tally[c] += 1
+                by_arm_codes[r["arm"]][c] += 1
+        top = ", ".join(f"TS{c}×{n}" for c, n in sorted(codes.items(), key=lambda kv: -kv[1])[:4]) or "—"
+        disp = r.get("display", r.get("trial", "?"))
+        rows.append(f"| {disp} | {r['arm']} | {','.join(r.get('failed_gates') or [])} | {top} |")
+    rows.append("")
+    rows.append("**Aggregate TS error codes across failures:**")
+    rows.append("")
+    rows.append("| code | meaning | count | arms |")
+    rows.append("| --- | --- | --- | --- |")
+    for c, n in sorted(code_tally.items(), key=lambda kv: -kv[1]):
+        arms = ",".join(sorted(a for a in by_arm_codes if by_arm_codes[a].get(c)))
+        rows.append(f"| TS{c} | {TS_MEANING.get(c, '?')} | {n} | {arms} |")
     return "\n".join(rows)
 
 
@@ -156,7 +214,7 @@ def figures(recs: list[dict], rrecs: list[dict]) -> list[str]:
 
 
 def main() -> int:
-    recs = _load("canonical.jsonl")
+    recs = _dedup_canonical(_load("canonical.jsonl"))
     rrecs = _load("resume_exp.jsonl")
     frecs = _load("followup_exp.jsonl")
     md = [
@@ -165,6 +223,7 @@ def main() -> int:
         "## Outcome (hardened oracle)\n", outcome_table(recs), "",
         "## Single-context scaling (breaking-point search)\n", scaling_table(recs), "",
         "## Discovery Reuse Rate\n", drr_table(recs), "",
+        "## Failure taxonomy (mechanism)\n", failure_taxonomy(recs), "",
         "## Resumability (H4): work surviving an interruption\n", resumability_table(rrecs), "",
         "## Follow-up / extension (re-derivation cost)\n", followup_table(frecs), "",
     ]

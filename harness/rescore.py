@@ -42,7 +42,8 @@ def rescore(trial_dir: Path, sub: str, profile: dict) -> dict:
         "DRR": drr["rate"],
         "drr_detail": {k: drr[k] for k in ("numerator", "denominator", "by_depth")},
         "failed_gates": [
-            {"name": g["name"], "tail": (g.get("stdout_tail") or g.get("stderr_tail") or "")[-160:],
+            {"name": g["name"],
+             "tail": ((g.get("stdout_tail") or "") + "\n" + (g.get("stderr_tail") or ""))[-2000:],
              "residual_js": g.get("residual_js"), "missing_ts": g.get("missing_ts")}
             for g in verdict.get("gates", []) if not g.get("passed")
         ],

@@ -7,9 +7,10 @@ _n canonical records: 8; resumability runs: 0; follow-up runs: 0_
 | scope | n | monolith | durable | stateless-RAG |
 | --- | --- | --- | --- | --- |
 | express | 7 | PASS h=0 DRR=0.75 | PASS h=0 DRR=0.75 | PASS h=0 DRR=0.25 |
+| jsdom-S | 8 | — | — | FAIL h=0 DRR=0.0 (typecheck_strict,conversion_complete) |
 | jsdom-L | 60 | PASS h=0 DRR=0.5472 | — | — |
 | jsdom-XL | 120 | PASS h=0 DRR=0.4563 | — | — |
-| jsdom-S | 8 | PASS h=0 DRR=0.1667 | PASS h=0 DRR=0.0 | FAIL h=0 DRR=0.0 (typecheck_strict,conversion_complete) |
+| jsdom-S | 8 | PASS h=0 DRR=0.1667 | PASS h=0 DRR=0.0 | — |
 
 ## Single-context scaling (breaking-point search)
 
@@ -25,9 +26,25 @@ _n canonical records: 8; resumability runs: 0; follow-up runs: 0_
 | scope | monolith | durable | stateless-RAG | durable−RAG |
 | --- | --- | --- | --- | --- |
 | express | 0.75 | 0.75 | 0.25 | 0.5 |
+| jsdom-S | — | — | 0.0 | — |
 | jsdom-L | 0.5472 | — | — | — |
 | jsdom-XL | 0.4563 | — | — | — |
-| jsdom-S | 0.1667 | 0.0 | 0.0 | 0.0 |
+| jsdom-S | 0.1667 | 0.0 | — | — |
+
+## Failure taxonomy (mechanism)
+
+| trial | arm | failed gates | TS error codes (top) |
+| --- | --- | --- | --- |
+| jsdom-S | rag | typecheck_strict,conversion_complete | TS2451×7, TS2345×2, TS2717×1, TS2430×1 |
+
+**Aggregate TS error codes across failures:**
+
+| code | meaning | count | arms |
+| --- | --- | --- | --- |
+| TS2451 | cannot redeclare block-scoped variable (cross-file conflict) | 7 | rag |
+| TS2345 | argument type not assignable | 2 | rag |
+| TS2717 | ? | 1 | rag |
+| TS2430 | ? | 1 | rag |
 
 ## Resumability (H4): work surviving an interruption
 
