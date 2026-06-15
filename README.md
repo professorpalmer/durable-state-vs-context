@@ -17,6 +17,28 @@ context → better). An alternative framing: the working set should live in
 that state rather than the container of it. We test which framing the data
 supports, with explicit controls that isolate the variable.
 
+## Headline findings (current — see `RESULTS.md` / `paper/paper.md`)
+
+The data supports the state-architecture framing, with calibrated honesty:
+
+- **The naive context thesis is refuted, then reframed.** A single navigating agent
+  cleanly migrates up to **240** interdependent modules — it does *not* break where the
+  context-window thesis predicts. It *does* crack at the full **364**-module tree, but by
+  **capacity** (16 residual strict-type errors, no repair seam), not by window overflow.
+- **Durable accumulation > stateless retrieval.** Same model/tools/decomposition — only
+  accumulation differs. RAG's blind workers emit code that won't compile (`TS2451`
+  redeclaration conflicts appear *only* in RAG); durable does not. At full scale durable
+  reaches a **clean** `tsc --strict` tree (raw 5 errors → targeted repair → 0) where the
+  monolith has no seam.
+- **Three advantages, one root** (*discoveries are durable objects, not prompt text*):
+  (1) conflict-free parallel decomposition; (2) interruption-resumable checkpoints
+  (durable preserves 70.8% + resumes→PASS vs monolith 0%); (3) **zero-marginal-cost
+  re-query** — recalling a materialized discovery is a SQLite read, not an LLM call.
+- **Honest limit:** parallel *headroom* grows with repo size (critical path falls to
+  **4.6%** of total work at full scale, 21.6× theoretical), but *usable* concurrency is
+  capped at **K≈10–11** sessions by the serving platform — an orchestration ceiling, not a
+  durable-state one. Closing it is future work (admission control + dataflow scheduling).
+
 ## Arms (one substrate, one dimension varied: how state flows between workers)
 
 | arm | decomposition | retrieval | accumulation |
@@ -43,8 +65,9 @@ trees load `.ts` at runtime. See `oracle/run_oracle.py`.
 ## Independent variable: repository **scope** (not token budget)
 
 Scope is selected deterministically by BFS over the intra-repo dependency graph
-from a fixed anchor, in size strata (jsdom S/M/L/XL = 8/24/60/120 modules), so we
-argue over *repository size* rather than prompt tokens.
+from a fixed anchor, in size strata (jsdom S/M/L/XL/XXL/FULL =
+8/24/60/120/240/364 modules, where FULL is the entire `lib/` tree), so we argue over
+*repository size* rather than prompt tokens.
 
 ## Layout
 
@@ -59,7 +82,7 @@ DESIGN.md    full experimental design + hypotheses
 RESULTS.md   honest running summary of findings
 ```
 
-## Reproationality
+## Reproducibility
 
 Targets are pinned to exact commits (`*.pin.json`). Each trial provisions a fresh
 checkout, runs the arm, and is scored by the same oracle. Re-scoring an existing
