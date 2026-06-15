@@ -104,6 +104,30 @@ not `any` — but ran out of capacity to globally narrow types at full scale. Th
 is a **capacity** failure (correctness under a single global view), categorically
 different from RAG's failure mode below.
 
+**Durable at the same 364 scale (capstone).** Durable decomposition converted all
+364 modules (364 workers, ~3.2 h) and its *raw* tree carries **only 5 type errors
+vs the monolith's 16**. We are careful not to overclaim: durable does **not**
+eliminate conflicts outright. Its residue is bounded *intra-layer* — sibling
+modules converted in the **same** dependency layer are blind to each other (each
+sees only *prior* committed layers), so two CSS-rule siblings redeclared a shared
+type (`TS2451`/`TS2300`). This is the *same conflict class* RAG suffers, but
+**bounded to a single layer** instead of global. Because the tree is decomposed
+and consistent, **targeted iterative repair** — re-run only the conflicting
+modules, which can now see each other on the shared tree — drove the tree to a
+clean `typecheck_strict` in **3 iterations / 4 repair-worker calls / 258 s
+(~4.3 min)**, verified `tsc --strict --noEmit` 0-error. The one-shot monolith
+offers no such seam: its 16 errors sit inside a single 364-module context with
+nothing to re-run against. The durable edge at full scale is therefore
+**repairability via decomposition**, not a magically perfect first pass — a
+deliberately honest, narrower claim.
+
+| 364-module full repo | monolith (one-shot) | durable (decomposed) |
+| --- | --- | --- |
+| converted | 364/364 | 364/364 |
+| raw strict-type errors | 16 | 5 |
+| self-repair seam | none | per-module re-run |
+| after targeted repair | n/a (no seam) | **0 errors, CLEAN** (4.3 min) |
+
 ### 4.2 Durable accumulation > stateless retrieval (the clean divergence)
 | scope | durable | stateless-RAG |
 | --- | --- | --- |
