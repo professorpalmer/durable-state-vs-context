@@ -90,21 +90,29 @@ Conversions are decoupled from scoring; all trees are re-scored by the current o
 
 ## Concurrency ceiling (parallelism soak) — durable's speed is platform-bound, not design-bound
 
-We probed durable FULL(364) at increasing worker concurrency on the frozen engine to test the
-"just send 20× workers" intuition. Clean single-run success rates (worker produced a `.ts`):
+We ran a clean **5-point concurrency sweep** on durable FULL(364) on the frozen engine to test
+the "just send 20× workers" intuition. Single-run success rates (worker produced a `.ts`), each
+run contamination-checked (`base_build_start == 1`):
 
 | concurrency | success rate | implied session cap K | failure mode |
 | --- | --- | --- | --- |
-| C=4 (capstone) | ~100% | — | none |
+| C=8  | 91% (48/53) | ~7.3 | fast (<20s) no-diff no-ops |
+| C=12 | 96% (50/52) | ~11.5 | fast (<20s) no-diff no-ops |
 | C=16 | 70% (44/63) | ~11.2 | fast (<20s) no-diff no-ops |
+| C=24 | 29% (35/122) / 23% (30/131) | ~6.3 | heavy throttle |
 | C=32 | 34% (51/152) | ~10.7 | fast (<20s) no-diff no-ops |
 
-Success follows `min(1, K/C)` with **K ≈ 10–11**: the Cursor API/SDK sustains ~10–11 concurrent
-agent sessions; excess workers are throttled into fast no-edit returns (median ~5–11s vs ~90–170s
-for a real conversion) that the `require_diff` gate rejects and the harness retries. This is a
-**Cursor-platform session cap, not a Puppetmaster orchestration failure** — PM spawned, leased,
-and retried all 32 correctly, and durable state + retry absorbed the throttle (the run still
-converges, just inefficiently, wasting API calls on doomed attempts).
+Success is high (>90%) below ~12 concurrent sessions and **collapses** above it. The collapse is
+real but **stochastic**, *not* a clean `min(1, K/C)` law: two independent C=24 runs (29%, 23%)
+both landed *below* the C=32 rate, and the implied K wanders between ~6 and ~12 across the sweep.
+We therefore report an **effective session cap K ≈ 10–12** rather than a precise constant — the
+Cursor API/SDK sustains on the order of ~10 concurrent agent sessions; excess workers are
+throttled into fast no-edit returns (median ~5–11s vs ~90–170s for a real conversion) that the
+`require_diff` gate rejects and the harness retries. This is a **Cursor-platform session cap, not
+a Puppetmaster orchestration failure** — PM spawned, leased, and retried every worker correctly,
+and durable state + retry absorbed the throttle (the run still converges, just inefficiently,
+wasting API calls on doomed attempts). Confirming the cap is platform-specific (not fundamental)
+needs a second, independent serving backend — the key remaining validation.
 
 **Implication for the scaling thesis.** The dataflow headroom is real (21.6× at FULL; critical
 path = 4.6% of total work) but only ~K≈10 of it is *usable* at once on this platform. At the

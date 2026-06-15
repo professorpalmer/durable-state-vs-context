@@ -31,8 +31,9 @@ taxonomy shows three architectures fail in three distinct ways — RAG by *confl
 monolith by *capacity*, durable by neither. We also measure the limit of the
 parallelism this enables: the dependency critical path falls to **4.6% of total
 work** at full scale (so headroom *grows* with repo size), but *usable* concurrency
-is capped at **K≈10–11** simultaneous agent sessions by the serving platform, not by
-durable state — an orchestration constraint we localize and leave as future work.
+is capped at an effective **K≈10–12** simultaneous agent sessions by the serving
+platform (a 5-point sweep; the over-cap success rate is stochastic), not by durable
+state — an orchestration constraint we localize and leave as future work.
 The contribution is a reframing — *state is an asset, not a prompt* — with controls
 that isolate which capability actually matters.
 
@@ -88,7 +89,7 @@ capabilities, and the controlled design isolates them.
    resumable consistent checkpoints, and zero-marginal-cost re-query of materialized
    discoveries (a database read, not an LLM call).
 5. An honest localization of the one place durable does *not* win — wall-clock at full
-   scale — to a *platform* concurrency ceiling (K≈10–11 sessions), not to state
+   scale — to a *platform* concurrency ceiling (K≈10–12 sessions), not to state
    architecture, with the parallel headroom shown to *grow* with repo size.
 
 ## 2. Related work
@@ -325,18 +326,22 @@ total work as the DAG broadens (max layer width 5 → 78 across the sweep):
 | 60 | 20% | 4.9× |
 | **364** | **4.6%** | **21.6×** |
 
-So ~95% of full-scale work is parallelizable (Fig. `headroom_vs_scale`). But a soak that
-raised requested concurrency on the *same* full-scale durable run found a hard limit that is
-**not** durable state's: worker success follows `min(1, K/C)` with **K≈10–11** (clean single
-runs: C=16 → 70% [44/63], C=32 → 34% [51/152]; Fig. `concurrency_ceiling`). Beyond ~K concurrent sessions the
-serving platform throttles excess workers into fast (<20 s vs ~90–170 s) no-edit returns. We
-attribute this to the **Cursor API/SDK session cap, not the orchestrator**: Puppetmaster
-spawned, leased, and retried all 32 correctly, and durable state + retry *absorbed* the
-throttle (the run still converges). The consequence: at the practical ceiling, durable wall ≈
-work/10.6 ≈ 1.1 h vs the monolith's 0.83 h — durable is ~1.3× *slower* on wall-clock while
-being the only arm that reaches a clean strict typecheck at full scale. The 21.6× theoretical
-headroom is real but only ~K of it is spendable at once today; closing that gap is an
-*orchestration* problem (§6 future work), not a property of durable state.
+So ~95% of full-scale work is parallelizable (Fig. `headroom_vs_scale`). But a clean
+**5-point concurrency sweep** on the *same* full-scale (364-module) durable run found a hard
+limit that is **not** durable state's. Worker success stays high below ~12 concurrent sessions
+(C=8 → 91% [48/53], C=12 → 96% [50/52]) and collapses above it (C=16 → 70% [44/63], C=32 → 34%
+[51/152]); the excess sessions are throttled into fast (<20 s vs ~90–170 s) no-edit returns.
+The collapse is real but **stochastic**: two independent C=24 runs returned 29% [35/122] and
+23% [30/131], *both below* the C=32 rate — so we report an **effective session cap of K≈10–12**,
+not a clean `min(1, K/C)` law (Fig. `concurrency_ceiling` plots the points scattering around a
+K=11 reference; the over-cap rate does not decline monotonically in C). We attribute the cap to
+the **Cursor API/SDK, not the orchestrator**: Puppetmaster spawned, leased, and retried every
+worker correctly, and durable state + retry *absorbed* the throttle (the run still converges).
+The consequence: at the practical ceiling, durable wall ≈ work/~11 ≈ 1.1 h vs the monolith's
+0.83 h — durable is ~1.3× *slower* on wall-clock while being the only arm that reaches a clean
+strict typecheck at full scale. The 21.6× theoretical headroom is real but only ~K of it is
+spendable at once today; closing that gap is an *orchestration* problem (§6 future work), not a
+property of durable state.
 
 ## 5. Discussion
 - **Three advantages, one root.** Everything durable wins flows from a single property —
@@ -352,7 +357,7 @@ headroom is real but only ~K of it is spendable at once today; closing that gap 
   realized when one context is insufficient, or work must survive interruption,
   parallelize, or be revisited cheaply — not a universal "context is solved" claim.
 - **The speed gap is an orchestration ceiling, not a state-architecture one.** Durable's
-  ~1.3× wall-clock penalty at full scale (§4.8) is set by a platform session cap (K≈10–11),
+  ~1.3× wall-clock penalty at full scale (§4.8) is set by a platform session cap (K≈10–12),
   not by accumulation; the theoretical 21.6× headroom says the *architecture* scales, and
   realizing it is an engineering problem on the serving/scheduling side (§6).
 
@@ -378,12 +383,16 @@ headroom is real but only ~K of it is spendable at once today; closing that gap 
 - Cursor-SDK token counts are unreliable (implausibly low); we report wall-clock,
   worker count, and DRR as the cost axes instead of token deltas.
 - Single platform (Puppetmaster cursor workers); model routing held constant.
-- **Platform concurrency ceiling (§4.8).** Usable parallelism is capped at K≈10–11
-  concurrent agent sessions by the serving API, so the measured wall-clock does not yet
-  realize the 21.6× dataflow headroom. This bounds the *speed* comparison (durable ~1.3×
+- **Platform concurrency ceiling (§4.8).** Usable parallelism is capped at an effective
+  K≈10–12 concurrent agent sessions by the serving API, so the measured wall-clock does not
+  yet realize the 21.6× dataflow headroom. This bounds the *speed* comparison (durable ~1.3×
   the monolith at full scale) but not the *correctness*, *resumability*, or *re-query*
-  results, none of which depend on concurrency. We probed clean single runs at C∈{4,16,32}
-  to isolate the cap; a wider sweep and a second serving backend are future work.
+  results, none of which depend on concurrency. We ran a clean 5-point sweep at
+  C∈{8,12,16,24,32} (C=24 sampled twice) to isolate the cap; the over-cap success rate is
+  stochastic (two C=24 runs fell below the C=32 rate), so we report an effective cap rather
+  than a clean `min(1, K/C)` law. A second, independent serving backend — to confirm the cap
+  is platform-specific rather than fundamental — remains the key open validation (it needs a
+  non-Cursor agent backend; left as future work).
 
 ## 6.1 Future work (orchestration track — distinct from the state-architecture claim)
 These close the §4.8 speed gap and are properties of the *scheduler/serving layer*, not of

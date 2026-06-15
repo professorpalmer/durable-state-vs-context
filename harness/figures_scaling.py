@@ -36,32 +36,52 @@ def _success_rate(profile: Path) -> tuple[int, int]:
 
 
 def fig_ceiling() -> None:
-    pts = [(4, 1.0, "364/364 (capstone)")]  # C=4 anchor: capstone first pass converted all
-    for c, prof in [(16, "probe_c16_v2.jsonl"), (32, "sweep_c32_clean.jsonl")]:
+    # 5-point clean sweep (C=24 sampled twice to expose run-to-run variance).
+    # Each profile is a single, contamination-checked full-scope durable run.
+    probes = [
+        (8, "ksweep_c8.jsonl"),
+        (12, "ksweep_c12.jsonl"),
+        (16, "probe_c16_v2.jsonl"),
+        (24, "ksweep_c24_run1.jsonl"),
+        (24, "ksweep_c24.jsonl"),
+        (32, "sweep_c32_clean.jsonl"),
+    ]
+    pts = []
+    for c, prof in probes:
         got, n = _success_rate(PROF / prof)
         pts.append((c, got / n, f"{got}/{n}"))
 
     cs = [p[0] for p in pts]
     rates = [p[1] for p in pts]
-    # fit K from the two over-cap points
-    K = sum(c * r for c, r, _ in pts if c >= 16) / sum(1 for c, _, _ in pts if c >= 16)
+    # Reference (NOT a fit): effective session cap from the points that bracket the
+    # knee + the far-over-cap point. The measured points scatter around it because
+    # the throttle is stochastic — we show the reference to read off the cap, not to
+    # claim the data obey it.
+    K = 11.0
 
-    fig, ax = plt.subplots(figsize=(6.2, 4.2))
-    xs = list(range(2, 40))
+    fig, ax = plt.subplots(figsize=(6.6, 4.4))
+    xs = [x * 0.25 for x in range(8, 144)]
     ax.plot(xs, [min(1.0, K / x) for x in xs], "--", color="#888",
-            label=f"min(1, K/C),  K≈{K:.1f} sessions")
-    ax.plot(cs, rates, "o-", color="#c0392b", lw=2, ms=9, label="measured (clean single run)")
+            label=f"reference min(1, K/C), K={K:.0f}")
+    ax.scatter(cs, rates, color="#c0392b", s=80, zorder=3,
+               label="measured success rate (clean single run)")
     for c, r, lab in pts:
-        dy = -14 if c == 4 else 8
-        ax.annotate(lab, (c, r), textcoords="offset points", xytext=(8, dy), fontsize=8)
-    ax.axhspan(0, 0.5, color="#c0392b", alpha=0.05)
+        ax.annotate(lab, (c, r), textcoords="offset points", xytext=(7, 6), fontsize=8)
+    # highlight the two C=24 samples as a variance bar
+    c24 = [r for c, r, _ in pts if c == 24]
+    ax.plot([24, 24], [min(c24), max(c24)], color="#c0392b", lw=1, alpha=0.5)
+    ax.axvspan(0, 12, color="#27ae60", alpha=0.05)
+    ax.axvspan(16, 36, color="#c0392b", alpha=0.05)
+    ax.text(6, 0.12, "below cap:\n>90%", fontsize=8, color="#1e8449", ha="center")
+    ax.text(28, 0.78, "above cap: noisy\n~25–35% plateau", fontsize=8, color="#922b21", ha="center")
     ax.set_xlabel("requested worker concurrency  (C)")
     ax.set_ylabel("worker success rate  (produced .ts)")
-    ax.set_title("Concurrency ceiling: usable parallelism caps at K≈10–11 sessions")
+    ax.set_title("Concurrency ceiling: success collapses above ~12 sessions\n"
+                 "(effective platform cap K≈10–12; over-cap rate is stochastic)")
     ax.set_ylim(0, 1.05)
     ax.set_xlim(0, 36)
     ax.grid(alpha=0.3)
-    ax.legend(loc="upper right", fontsize=9)
+    ax.legend(loc="center right", fontsize=9)
     fig.tight_layout()
     p = FIGS / "concurrency_ceiling.png"
     fig.savefig(p, dpi=140)

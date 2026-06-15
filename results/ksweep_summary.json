@@ -1,0 +1,11 @@
+[
+  {
+    "C": 24,
+    "workers_done": 131,
+    "ok": 30,
+    "fast_fail": 100,
+    "rate": 0.229,
+    "base_starts": 1,
+    "profile": "/Users/cary/lwds/results/profiles/ksweep_c24.jsonl"
+  }
+]

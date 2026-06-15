@@ -26,7 +26,10 @@ PROFILE = str(HERE / "profiles" / "jsdom.json")
 RUN_ARM = str(HERE / "run_arm.py")
 PROF_DIR = ROOT / "results" / "profiles"
 
-TARGET_WORKERS = 48      # enough completed workers for a stable rate
+TARGET_OK = 30           # stop once this many *genuine successes* (rc==0) land.
+                         # NOT total worker_end: at high C the throttle churns out
+                         # dozens of fast-fails in seconds, so a worker-count stop
+                         # would halt before the slow real successes finish.
 MAX_SECONDS = 16 * 60    # hard cap per probe
 POLL = 12                # seconds between profile reads
 
@@ -106,8 +109,8 @@ def run_probe(c: int) -> dict:
             if proc.poll() is not None:
                 print(f"  C={c} process exited on its own", flush=True)
                 break
-            if st["worker_end"] >= TARGET_WORKERS:
-                print(f"  C={c} reached {TARGET_WORKERS} workers — stopping early", flush=True)
+            if st["ok"] >= TARGET_OK:
+                print(f"  C={c} reached {TARGET_OK} successes — stopping early", flush=True)
                 break
             if st["layer_starts"] > 1:
                 print(f"  C={c} layer 0 complete — stopping", flush=True)
@@ -116,12 +119,15 @@ def run_probe(c: int) -> dict:
                 print(f"  C={c} hit time cap — stopping", flush=True)
                 break
     finally:
-        try:
-            os.killpg(pgid, signal.SIGTERM)
+        for sig in (signal.SIGTERM, signal.SIGKILL):
+            try:
+                os.killpg(pgid, sig)
+            except (ProcessLookupError, PermissionError):
+                pass
             time.sleep(3)
-            os.killpg(pgid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass
+        # belt-and-suspenders: reap any stray run_arm/worker procs for THIS probe
+        subprocess.run(["pkill", "-9", "-f", f"pm-state-ksweep-c{c}"],
+                       capture_output=True)
     # settle + final read
     time.sleep(2)
     st = _profile_stats(prof_path)

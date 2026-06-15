@@ -22,10 +22,7 @@ __pycache__/
 # OS
 .DS_Store
 
-# Concurrency-soak artifacts: empty run logs + superseded/contaminated probe
-# profiles. The clean figure-source profiles (sweep_c32_clean, probe_c16_v2,
-# validate_express) ARE tracked; these are process noise.
-results/profiles/*.log
-results/profiles/*DOUBLERUN*
-results/profiles/ceiling_L_c16.jsonl
-results/profiles/probe_c16.jsonl
+# K-sweep ephemeral state (profiles ARE tracked as evidence)
+pm-state-ksweep-*/
+runs-ksweep-*/
+results/ksweep_c*_trial.jsonl
