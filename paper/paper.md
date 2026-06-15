@@ -156,6 +156,24 @@ zero known-good modules — the entire single shot is lost. This is a *structura
 property of single-transcript execution, not a tuning artifact: there is no
 mechanism by which a monolith can expose a consistent intermediate checkpoint.
 
+### 4.6 Hypothesis scorecard (calibrated, including refutations)
+We pre-registered five hypotheses and report verdicts honestly — including where
+our own headline hypothesis was *refuted*, which sharpened the contribution.
+
+| H | claim (pre-registered) | verdict | evidence |
+| --- | --- | --- | --- |
+| **H1** | a single transcript's pass-rate *collapses* once scope exceeds the window | **REFUTED (naive form) → REFRAMED** | monolith clean to **240** modules by navigating the filesystem; it does crack at **364**, but by *capacity* (un-narrowed types), not window-overflow. The binding constraint is **state architecture, not nominal context length** — the paper's actual thesis. |
+| **H2** | durable accumulation > stateless retrieval, same decomposition+retrieval | **SUPPORTED** | durable PASS vs RAG FAIL at S (0/3 seeds), M, L. Only accumulation differs. |
+| **H3** | failure mechanism differs by architecture | **SUPPORTED (revised)** | not generic "context overflow": RAG fails by *conflict* (`TS2451` only in RAG), monolith by *capacity* (`TS2571` only in monolith), durable by neither. |
+| **H4** | durable resumes near-free under interruption; transcript must restart | **SUPPORTED** | durable 70.8% preserved + resume→oracle PASS; monolith 0% preserved, full redo. |
+| **H5** | a larger-window model only postpones transcript collapse | **NOT TESTED / MOOT** | model held constant by design; the breaking-point analysis shows window was not the binding constraint, so the larger-window framing is superseded by H1's reframing. |
+
+That H1's naive form failed is the most important honesty in this paper: it is *why*
+the contribution is "state architecture, not context length," not "we beat the
+context window." The win is concentrated exactly where a single context is
+structurally insufficient — parallel decomposition without conflicts, and
+resumable consistent checkpoints — not in out-muscling a navigating agent at moderate scale.
+
 ## 5. Discussion
 - What durable state buys (measured): conflict-free decomposition; resumable
   consistent checkpoints. What it does **not** buy for this task: raw single-agent
