@@ -183,7 +183,9 @@ Every other result in the paper is on the Cursor substrate.
 | 240 | PASS | 0 hatches, 26 min |
 | **364 (full `lib/`)** | **FAIL** | converts all, tests green, 0 hatches, but **16 strict-type errors** |
 
-A single context did **not** break where the context-length thesis predicts: the
+![The single-context monolith passes the oracle at every scope up to 240 interdependent modules and fails only at the full 364-module tree — and it fails by *capacity* (residual strict-type errors on the hardest module), not by window overflow.](../figures/monolith_scaling.png){width=72%}
+
+A single context did **not** break where the context-length thesis predicts (Fig. 1): the
 agent is *already* a reasoner over external state (the filesystem), pulling in
 modules on demand rather than cramming a working set into the prompt. It cleanly
 migrated up to **240** interdependent modules. **This is itself a finding** and it
@@ -276,7 +278,9 @@ At a hard interruption after an *equal* wall budget (~1200 s) on jsdom-M(24):
 | durable | **70.8%** (17/24 committed) | layers type-check (consistent) | resumes → **oracle PASS** (24/24) |
 | monolith | **0%** (0/24 committed) | no (inconsistent partial) | 0 modules; full redo |
 
-Durable committed 17 modules across 6 dependency layers before the interrupt;
+![Work surviving a hard interruption at an equal wall budget (jsdom-M, 24 modules). Durable's per-layer commits preserve 70.8% of the work as a consistent, oracle-passing partial tree it can resume from; the monolith persists nothing until one terminal write, so the interrupt loses the entire shot.](../figures/resumability.png){width=62%}
+
+Durable committed 17 modules across 6 dependency layers before the interrupt (Fig. 2);
 resuming from that on-disk committed state completed the remaining 7 and the tree
 passed the full oracle. The monolith persists nothing until one terminal write, so
 its interrupted 24-file partial tree is inconsistent, fails the oracle, and yields
@@ -338,30 +342,39 @@ total work as the DAG broadens (max layer width 5 → 78 across the sweep):
 | 60 | 20% | 4.9× |
 | **364** | **4.6%** | **21.6×** |
 
-So ~95% of full-scale work is parallelizable (Fig. `headroom_vs_scale`). But a **replicated
+![Parallel headroom *grows* with repository size: as the dependency DAG broadens, the serial critical path falls from 45% of total work at 8 modules to 4.6% at the full 364-module tree, so the theoretical dataflow speedup rises to 21.6×. Work parallelizes; the critical path does not.](../figures/headroom_vs_scale.png){width=72%}
+
+So ~95% of full-scale work is parallelizable (Fig. 3). But a **replicated
 concurrency sweep** on the *same* full-scale (364-module) durable run found a hard limit that is
 **not** durable state's. Each point is the mean ± 95% CI over n=5–10 quality-gated replicates,
 all measured with an *identical* protocol — a fixed 240 s steady-state window per run, every run
 contamination-checked (`base_build_start==1`) and required to complete the full window
-(Fig. `concurrency_ceiling`). Worker success is high below the cap (C=8 → 97% ±5.7, C=12 → 99%
+(Fig. 4). Worker success is high below the cap (C=8 → 97% ±5.7, C=12 → 99%
 ±2.0) and **collapses monotonically** through a sharp knee (C=16 → 66% ±2.7, C=24 → 28% ±4.3,
 C=32 → 19% ±8.1); the excess sessions are throttled into fast (<20 s vs ~90–170 s) no-edit
 returns. Reading the **effective admission cap** off the knee gives **K≈10–12** (C=12 K_eff=11.9,
 C=16 K_eff=10.5). Above the cap the rate falls *below* a `min(1, K/C)` reference: retry churn on
 throttled sessions inflates the denominator, so the collapsed regime is *steeper* than 1/C.
+
+![Replicated concurrency sweep on the full-scale (364-module) durable run, Cursor backend (n=5–10 per point, uniform 240 s window, mean ± 95% CI). Worker success holds at ~97–99% below ~12 simultaneous sessions and collapses monotonically above it — an effective admission cap of K≈10–12 imposed by the serving API, which durable state + retry then absorbs.](../figures/concurrency_ceiling.png){width=78%}
+
 (An earlier single-run probe showed a spurious non-monotonicity at C=24; replication with the
 uniform-window protocol showed it was a measurement artifact of mixed stop-rules, not a property
 of the system.) We attribute the cap to the **Cursor API/SDK, not the orchestrator**: Puppetmaster
 spawned, leased, and retried every worker correctly, and durable state + retry *absorbed* the
 throttle (the run still converges). **We confirm this with a second-backend control**
-(Fig. `concurrency_backends`): holding the orchestrator and durable state fixed and swapping only
+(Fig. 5): holding the orchestrator and durable state fixed and swapping only
 the worker backend from Cursor agents to **Claude Code** (Anthropic API), a concurrency probe that
 launches exactly C workers simultaneously sustains **100% success at every C ∈ {4,8,16,24,32}**
 (n=3 each; 252 workers; 0 fast-fails) — including at C=16/24/32, where the Cursor backend collapses
 to 66%/28%/19%. The contrast is the result: identical orchestration + durable state, one backend
 caps and the other does not, so the cap is a property of the **serving platform**, not of durable
 state or the orchestrator. (We keep both arms precisely because the platform-specificity claim *is*
-this contrast; a single-backend curve could not establish it.) The consequence: at the practical ceiling, durable wall ≈
+this contrast; a single-backend curve could not establish it.)
+
+![The same orchestrator and durable state on two serving backends. The Cursor backend (red) collapses above its K≈10–12 session cap; the Claude Code backend (green) sustains 100% worker success through C=32 (n=3 per point, 252 workers, 0 fast-fails). The concurrency cap is therefore platform-specific, not a property of durable state.](../figures/concurrency_backends.png){width=80%}
+
+The consequence: at the practical ceiling, durable wall ≈
 work/~11 ≈ 1.1 h vs the monolith's 0.83 h — durable is ~1.3× *slower* on wall-clock while being
 the only arm that reaches a clean strict typecheck at full scale. The 21.6× theoretical headroom
 is real but only ~K of it is spendable at once today; closing that gap is an *orchestration*
@@ -384,7 +397,7 @@ problem (§6 future work), not a property of durable state.
   ~1.3× wall-clock penalty at full scale (§4.8) is set by a *platform* session cap (K≈10–12
   on Cursor), not by accumulation. We demonstrate this directly: the same orchestrator and
   durable state on a **second backend (Claude Code) sustains 100% to C=32** where Cursor
-  collapses (Fig. `concurrency_backends`). The theoretical 21.6× headroom says the
+  collapses (Fig. 5). The theoretical 21.6× headroom says the
   *architecture* scales; realizing it is an engineering problem on the serving/scheduling
   side (§6), and the backend choice alone moves the ceiling.
 
@@ -419,7 +432,7 @@ problem (§6 future work), not a property of durable state.
   We ran a **replicated** sweep at C∈{8,12,16,24,32} (n=5–10 per point, uniform 240 s window,
   every run contamination-checked and quality-gated for a complete window), mean ± 95% CI; the
   collapse is monotone and tightly resolved. Crucially, a **second backend (Claude Code /
-  Anthropic) under the same orchestrator sustains 100% to C=32** (Fig. `concurrency_backends`),
+  Anthropic) under the same orchestrator sustains 100% to C=32** (Fig. 5),
   so the cap is platform-specific, not fundamental — it is an orchestration/serving constraint,
   not a property of durable state.
 

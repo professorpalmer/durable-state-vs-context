@@ -39,3 +39,7 @@ results/profiles/probe_c16.jsonl
 # the intermediate running log and the slow full-jsdom integration run are not.
 results/claude_probe_runs.json
 results/profiles/sweep_claude/
+
+# arXiv submission build (reproducible via paper/make_arxiv.sh)
+paper/arxiv/
+paper/arxiv-submission.tar.gz

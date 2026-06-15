@@ -139,7 +139,7 @@ workers simultaneously, each isolated on its own tree and PM state-dir, success 
 
 252 Claude workers, **0 fast-fails**, 2 transient rate-limit messages that still completed after
 backoff. Where Cursor collapses (C=16→66%, C=24→28%, C=32→19%), Claude sustains **100% to C=32**
-(Fig. `concurrency_backends`). Same orchestrator, same durable state, different backend → the
+(`figures/concurrency_backends.png`). Same orchestrator, same durable state, different backend → the
 admission cap is a property of the **serving platform**, not of durable state or Puppetmaster.
 This moves the platform-specificity claim from *argued* to *demonstrated*.
 

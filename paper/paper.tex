@@ -49,6 +49,21 @@
 % Allow footnotes in longtable head/foot
 \IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
 \makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
 \setlength{\emergencystretch}{3em} % prevent overfull lines
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
@@ -334,13 +349,22 @@ green, 0 hatches, but \textbf{16 strict-type errors} \\
 \end{longtable}
 }
 
+\begin{figure}
+\centering
+\includegraphics[width=0.72\linewidth,height=\textheight,keepaspectratio,alt={The single-context monolith passes the oracle at every scope up to 240 interdependent modules and fails only at the full 364-module tree --- and it fails by capacity (residual strict-type errors on the hardest module), not by window overflow.}]{../figures/monolith_scaling.png}
+\caption{The single-context monolith passes the oracle at every scope up
+to 240 interdependent modules and fails only at the full 364-module tree
+--- and it fails by \emph{capacity} (residual strict-type errors on the
+hardest module), not by window overflow.}
+\end{figure}
+
 A single context did \textbf{not} break where the context-length thesis
-predicts: the agent is \emph{already} a reasoner over external state
-(the filesystem), pulling in modules on demand rather than cramming a
-working set into the prompt. It cleanly migrated up to \textbf{240}
-interdependent modules. \textbf{This is itself a finding} and it
-reframes the contribution away from ``state beats context for a single
-agent.''
+predicts (Fig. 1): the agent is \emph{already} a reasoner over external
+state (the filesystem), pulling in modules on demand rather than
+cramming a working set into the prompt. It cleanly migrated up to
+\textbf{240} interdependent modules. \textbf{This is itself a finding}
+and it reframes the contribution away from ``state beats context for a
+single agent.''
 
 But at the \textbf{full 364-module \texttt{lib/} tree the one-shot
 architecture degrades}: it still converts everything and gets the test
@@ -540,15 +564,25 @@ modules; full redo \\
 \end{longtable}
 }
 
+\begin{figure}
+\centering
+\includegraphics[width=0.62\linewidth,height=\textheight,keepaspectratio,alt={Work surviving a hard interruption at an equal wall budget (jsdom-M, 24 modules). Durable's per-layer commits preserve 70.8\% of the work as a consistent, oracle-passing partial tree it can resume from; the monolith persists nothing until one terminal write, so the interrupt loses the entire shot.}]{../figures/resumability.png}
+\caption{Work surviving a hard interruption at an equal wall budget
+(jsdom-M, 24 modules). Durable's per-layer commits preserve 70.8\% of
+the work as a consistent, oracle-passing partial tree it can resume
+from; the monolith persists nothing until one terminal write, so the
+interrupt loses the entire shot.}
+\end{figure}
+
 Durable committed 17 modules across 6 dependency layers before the
-interrupt; resuming from that on-disk committed state completed the
-remaining 7 and the tree passed the full oracle. The monolith persists
-nothing until one terminal write, so its interrupted 24-file partial
-tree is inconsistent, fails the oracle, and yields zero known-good
-modules --- the entire single shot is lost. This is a \emph{structural}
-property of single-transcript execution, not a tuning artifact: there is
-no mechanism by which a monolith can expose a consistent intermediate
-checkpoint.
+interrupt (Fig. 2); resuming from that on-disk committed state completed
+the remaining 7 and the tree passed the full oracle. The monolith
+persists nothing until one terminal write, so its interrupted 24-file
+partial tree is inconsistent, fails the oracle, and yields zero
+known-good modules --- the entire single shot is lost. This is a
+\emph{structural} property of single-transcript execution, not a tuning
+artifact: there is no mechanism by which a monolith can expose a
+consistent intermediate checkpoint.
 
 \subsubsection{4.6 Hypothesis scorecard (calibrated, including
 refutations)}\label{hypothesis-scorecard-calibrated-including-refutations}
@@ -687,15 +721,24 @@ scope & critical path / total work & dataflow speedup headroom \\
 \end{longtable}
 }
 
-So \textasciitilde95\% of full-scale work is parallelizable (Fig.
-\texttt{headroom\_vs\_scale}). But a \textbf{replicated concurrency
-sweep} on the \emph{same} full-scale (364-module) durable run found a
-hard limit that is \textbf{not} durable state's. Each point is the mean
-± 95\% CI over n=5--10 quality-gated replicates, all measured with an
-\emph{identical} protocol --- a fixed 240 s steady-state window per run,
-every run contamination-checked (\texttt{base\_build\_start==1}) and
-required to complete the full window (Fig.
-\texttt{concurrency\_ceiling}). Worker success is high below the cap
+\begin{figure}
+\centering
+\includegraphics[width=0.72\linewidth,height=\textheight,keepaspectratio,alt={Parallel headroom grows with repository size: as the dependency DAG broadens, the serial critical path falls from 45\% of total work at 8 modules to 4.6\% at the full 364-module tree, so the theoretical dataflow speedup rises to 21.6×. Work parallelizes; the critical path does not.}]{../figures/headroom_vs_scale.png}
+\caption{Parallel headroom \emph{grows} with repository size: as the
+dependency DAG broadens, the serial critical path falls from 45\% of
+total work at 8 modules to 4.6\% at the full 364-module tree, so the
+theoretical dataflow speedup rises to 21.6×. Work parallelizes; the
+critical path does not.}
+\end{figure}
+
+So \textasciitilde95\% of full-scale work is parallelizable (Fig. 3).
+But a \textbf{replicated concurrency sweep} on the \emph{same}
+full-scale (364-module) durable run found a hard limit that is
+\textbf{not} durable state's. Each point is the mean ± 95\% CI over
+n=5--10 quality-gated replicates, all measured with an \emph{identical}
+protocol --- a fixed 240 s steady-state window per run, every run
+contamination-checked (\texttt{base\_build\_start==1}) and required to
+complete the full window (Fig. 4). Worker success is high below the cap
 (C=8 → 97\% ±5.7, C=12 → 99\% ±2.0) and \textbf{collapses monotonically}
 through a sharp knee (C=16 → 66\% ±2.7, C=24 → 28\% ±4.3, C=32 → 19\%
 ±8.1); the excess sessions are throttled into fast (\textless20 s vs
@@ -704,32 +747,55 @@ admission cap} off the knee gives \textbf{K≈10--12} (C=12 K\_eff=11.9,
 C=16 K\_eff=10.5). Above the cap the rate falls \emph{below} a
 \texttt{min(1,\ K/C)} reference: retry churn on throttled sessions
 inflates the denominator, so the collapsed regime is \emph{steeper} than
-1/C. (An earlier single-run probe showed a spurious non-monotonicity at
-C=24; replication with the uniform-window protocol showed it was a
-measurement artifact of mixed stop-rules, not a property of the system.)
-We attribute the cap to the \textbf{Cursor API/SDK, not the
-orchestrator}: Puppetmaster spawned, leased, and retried every worker
-correctly, and durable state + retry \emph{absorbed} the throttle (the
-run still converges). \textbf{We confirm this with a second-backend
-control} (Fig. \texttt{concurrency\_backends}): holding the orchestrator
-and durable state fixed and swapping only the worker backend from Cursor
-agents to \textbf{Claude Code} (Anthropic API), a concurrency probe that
-launches exactly C workers simultaneously sustains \textbf{100\% success
-at every C ∈ \{4,8,16,24,32\}} (n=3 each; 252 workers; 0 fast-fails) ---
-including at C=16/24/32, where the Cursor backend collapses to
-66\%/28\%/19\%. The contrast is the result: identical orchestration +
-durable state, one backend caps and the other does not, so the cap is a
-property of the \textbf{serving platform}, not of durable state or the
-orchestrator. (We keep both arms precisely because the
-platform-specificity claim \emph{is} this contrast; a single-backend
-curve could not establish it.) The consequence: at the practical
-ceiling, durable wall ≈ work/\textasciitilde11 ≈ 1.1 h vs the monolith's
-0.83 h --- durable is \textasciitilde1.3× \emph{slower} on wall-clock
-while being the only arm that reaches a clean strict typecheck at full
-scale. The 21.6× theoretical headroom is real but only \textasciitilde K
-of it is spendable at once today; closing that gap is an
-\emph{orchestration} problem (§6 future work), not a property of durable
-state.
+1/C.
+
+\begin{figure}
+\centering
+\includegraphics[width=0.78\linewidth,height=\textheight,keepaspectratio,alt={Replicated concurrency sweep on the full-scale (364-module) durable run, Cursor backend (n=5--10 per point, uniform 240 s window, mean ± 95\% CI). Worker success holds at \textasciitilde97--99\% below \textasciitilde12 simultaneous sessions and collapses monotonically above it --- an effective admission cap of K≈10--12 imposed by the serving API, which durable state + retry then absorbs.}]{../figures/concurrency_ceiling.png}
+\caption{Replicated concurrency sweep on the full-scale (364-module)
+durable run, Cursor backend (n=5--10 per point, uniform 240 s window,
+mean ± 95\% CI). Worker success holds at \textasciitilde97--99\% below
+\textasciitilde12 simultaneous sessions and collapses monotonically
+above it --- an effective admission cap of K≈10--12 imposed by the
+serving API, which durable state + retry then absorbs.}
+\end{figure}
+
+(An earlier single-run probe showed a spurious non-monotonicity at C=24;
+replication with the uniform-window protocol showed it was a measurement
+artifact of mixed stop-rules, not a property of the system.) We
+attribute the cap to the \textbf{Cursor API/SDK, not the orchestrator}:
+Puppetmaster spawned, leased, and retried every worker correctly, and
+durable state + retry \emph{absorbed} the throttle (the run still
+converges). \textbf{We confirm this with a second-backend control} (Fig.
+5): holding the orchestrator and durable state fixed and swapping only
+the worker backend from Cursor agents to \textbf{Claude Code} (Anthropic
+API), a concurrency probe that launches exactly C workers simultaneously
+sustains \textbf{100\% success at every C ∈ \{4,8,16,24,32\}} (n=3 each;
+252 workers; 0 fast-fails) --- including at C=16/24/32, where the Cursor
+backend collapses to 66\%/28\%/19\%. The contrast is the result:
+identical orchestration + durable state, one backend caps and the other
+does not, so the cap is a property of the \textbf{serving platform}, not
+of durable state or the orchestrator. (We keep both arms precisely
+because the platform-specificity claim \emph{is} this contrast; a
+single-backend curve could not establish it.)
+
+\begin{figure}
+\centering
+\includegraphics[width=0.8\linewidth,height=\textheight,keepaspectratio,alt={The same orchestrator and durable state on two serving backends. The Cursor backend (red) collapses above its K≈10--12 session cap; the Claude Code backend (green) sustains 100\% worker success through C=32 (n=3 per point, 252 workers, 0 fast-fails). The concurrency cap is therefore platform-specific, not a property of durable state.}]{../figures/concurrency_backends.png}
+\caption{The same orchestrator and durable state on two serving
+backends. The Cursor backend (red) collapses above its K≈10--12 session
+cap; the Claude Code backend (green) sustains 100\% worker success
+through C=32 (n=3 per point, 252 workers, 0 fast-fails). The concurrency
+cap is therefore platform-specific, not a property of durable state.}
+\end{figure}
+
+The consequence: at the practical ceiling, durable wall ≈
+work/\textasciitilde11 ≈ 1.1 h vs the monolith's 0.83 h --- durable is
+\textasciitilde1.3× \emph{slower} on wall-clock while being the only arm
+that reaches a clean strict typecheck at full scale. The 21.6×
+theoretical headroom is real but only \textasciitilde K of it is
+spendable at once today; closing that gap is an \emph{orchestration}
+problem (§6 future work), not a property of durable state.
 
 \subsection{5. Discussion}\label{discussion}
 
@@ -761,10 +827,10 @@ state.
   (K≈10--12 on Cursor), not by accumulation. We demonstrate this
   directly: the same orchestrator and durable state on a \textbf{second
   backend (Claude Code) sustains 100\% to C=32} where Cursor collapses
-  (Fig. \texttt{concurrency\_backends}). The theoretical 21.6× headroom
-  says the \emph{architecture} scales; realizing it is an engineering
-  problem on the serving/scheduling side (§6), and the backend choice
-  alone moves the ceiling.
+  (Fig. 5). The theoretical 21.6× headroom says the \emph{architecture}
+  scales; realizing it is an engineering problem on the
+  serving/scheduling side (§6), and the backend choice alone moves the
+  ceiling.
 \end{itemize}
 
 \subsection{6. Threats to validity}\label{threats-to-validity}
@@ -818,10 +884,9 @@ state.
   run contamination-checked and quality-gated for a complete window),
   mean ± 95\% CI; the collapse is monotone and tightly resolved.
   Crucially, a \textbf{second backend (Claude Code / Anthropic) under
-  the same orchestrator sustains 100\% to C=32} (Fig.
-  \texttt{concurrency\_backends}), so the cap is platform-specific, not
-  fundamental --- it is an orchestration/serving constraint, not a
-  property of durable state.
+  the same orchestrator sustains 100\% to C=32} (Fig. 5), so the cap is
+  platform-specific, not fundamental --- it is an orchestration/serving
+  constraint, not a property of durable state.
 \end{itemize}
 
 \subsection{6.1 Future work (orchestration track --- distinct from the

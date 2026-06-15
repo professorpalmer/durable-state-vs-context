@@ -5,11 +5,13 @@ Hugging Face Papers feed. HF Papers is built **on top of** arXiv — it only ind
 papers that already have an arXiv ID — so **arXiv is the gate**.
 
 ## 0. What's in this folder
-- `paper.md` — source of truth (Markdown).
-- `paper.tex` — standalone LaTeX (pandoc-generated, compiles clean with tectonic). **Preferred arXiv upload.**
-- `paper.pdf` — built PDF (fallback: arXiv accepts PDF-only submissions).
-- `arxiv-header.tex` — LaTeX preamble (unicode math glyph mapping); referenced by the build.
+- `paper.md` — source of truth (Markdown); embeds all 5 figures from `../figures/`.
+- `paper.tex` — standalone LaTeX (pandoc `-s`, arxiv-header inlined, 5 figures embedded).
+- `paper.pdf` — built PDF, 12 pages, 5 figures (fallback: arXiv accepts PDF-only submissions).
+- `arxiv-header.tex` — LaTeX preamble (unicode glyph mapping); inlined into `paper.tex` and `build.sh`.
 - `build.sh` — reproduces `paper.pdf` (`brew install pandoc tectonic` first).
+- `make_arxiv.sh` — **produces the self-contained `arxiv-submission.tar.gz`** (rewrites figure
+  paths to a flat `figures/` subdir and verifies it compiles standalone). **This is the arXiv upload.**
 
 ## 1. arXiv metadata (copy-paste)
 
@@ -20,7 +22,7 @@ papers that already have an arXiv ID — so **arXiv is the gate**.
 **Primary category:** `cs.SE` (Software Engineering)
 **Cross-list:** `cs.AI`, `cs.LG`
 
-**Comments field:** `9 pages, 3 figures. Code, data, and reproduction harness: https://github.com/professorpalmer/durable-state-vs-context ; trial records + concurrency sweeps: https://huggingface.co/datasets/CaryPalmer/durable-vs-context-trials`
+**Comments field:** `12 pages, 5 figures. Code, data, and reproduction harness: https://github.com/professorpalmer/durable-state-vs-context ; trial records + concurrency sweeps: https://huggingface.co/datasets/CaryPalmer/durable-vs-context-trials`
 
 **License (recommend):** CC BY 4.0 — maximizes HF visibility and reuse.
 
@@ -56,8 +58,10 @@ papers that already have an arXiv ID — so **arXiv is the gate**.
    *endorsement* from an established author, or it goes through moderation. This is the one
    step neither of us can shortcut — budget a few days. (Some accounts are auto-endorsed; you
    may get lucky.)
-3. New submission → upload `paper.tex` + `arxiv-header.tex` (and the two figure PNGs if you
-   inline them later). If AutoTeX fails, fall back to uploading `paper.pdf` (PDF-only is allowed).
+3. New submission → run `bash paper/make_arxiv.sh` and upload the resulting
+   `paper/arxiv-submission.tar.gz` (it bundles `paper.tex` + the 5 figures in a flat `figures/`
+   subdir, and is verified to compile standalone with tectonic = 12 pages). If AutoTeX fails,
+   fall back to uploading `paper.pdf` (PDF-only is allowed).
 4. Fill the metadata from §1. Submit. You'll get an arXiv ID like `2606.XXXXX`.
 
 ## 3. Index on Hugging Face Papers (trivial once on arXiv)
