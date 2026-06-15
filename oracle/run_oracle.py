@@ -155,9 +155,20 @@ def _count_escape_hatches(repo: Path, spec: dict[str, Any]) -> dict[str, Any]:
                 "error": f"count_cmd failed: {exc}",
             }
 
-    include_globs = cfg.get("include_globs", [])
     patterns: dict[str, str] = cfg.get("patterns", {})
-    files = _iter_files(repo, include_globs)
+    # Scope-restrict to the deliverable: when the trial declares which modules must
+    # be converted (require_converted), only those in-scope .ts files count toward
+    # the hatch budget. Hatches in out-of-scope files (e.g. an ambient shim the
+    # agent writes to declare genuinely-untyped *generated* code outside the scope)
+    # are a boundary artifact common to every arm, not a quality signal of the
+    # migration. Falls back to include_globs when no scope is declared.
+    scope = spec.get("require_converted")
+    if scope:
+        files = [repo / (f[:-3] + ".ts") for f in scope if (repo / (f[:-3] + ".ts")).is_file()]
+        scope_method = "regex_in_scope"
+    else:
+        files = _iter_files(repo, cfg.get("include_globs", []))
+        scope_method = "regex"
     by_pattern: dict[str, int] = {name: 0 for name in patterns}
     for path in files:
         try:
@@ -169,7 +180,7 @@ def _count_escape_hatches(repo: Path, spec: dict[str, Any]) -> dict[str, Any]:
     total = sum(by_pattern.values())
     return {
         "total": total, "by_pattern": by_pattern, "budget": budget,
-        "within_budget": total <= budget, "method": "regex",
+        "within_budget": total <= budget, "method": scope_method,
         "files_scanned": len(files),
     }
 
