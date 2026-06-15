@@ -30,6 +30,7 @@ import re
 import shutil
 import subprocess
 import sys
+import threading
 import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -37,7 +38,10 @@ from pathlib import Path
 from typing import Any, Optional
 
 HERE = Path(__file__).resolve().parent
-PM_ROOT = Path("/Users/cary/Desktop/Puppetmaster")
+# Frozen Puppetmaster engine pinned at commit af67d35 (see .pm-engine/.PINNED_COMMIT).
+# The research spawns workers from this snapshot, NOT the live PM dev tree, so the
+# experiment is immune to in-progress Puppetmaster edits (reproducible engine).
+PM_ROOT = Path("/Users/cary/lwds/.pm-engine")
 sys.path.insert(0, str(HERE))
 import select_scope  # noqa: E402
 import provision as provision_mod  # noqa: E402
@@ -45,6 +49,26 @@ from schema import TrialRecord, ArmStep, append_record  # noqa: E402
 from drr import discovery_reuse  # noqa: E402
 
 ORACLE = HERE.parent / "oracle" / "run_oracle.py"
+
+
+# ---- optional phase profiler (env-gated, zero overhead when off) ----
+# Set LWDS_PROFILE=/path/to/profile.jsonl to record per-phase timing for the
+# durable wall-clock breakdown (setup / worker / harvest / commit / barrier).
+# Purpose: decide whether the orchestration tax — rsync lightcopy, per-layer git
+# commits, layer-barrier idle — is worth attacking (COW worktrees, dataflow
+# scheduling) or whether the wall-clock is dominated by irreducible LLM time.
+_PROF_PATH = os.environ.get("LWDS_PROFILE")
+_PROF_LOCK = threading.Lock()
+_PROF_T0 = time.time()
+
+
+def prof(event: str, **fields: Any) -> None:
+    if not _PROF_PATH:
+        return
+    line = json.dumps({"t": round(time.time() - _PROF_T0, 3), "event": event, **fields})
+    with _PROF_LOCK:
+        with open(_PROF_PATH, "a", encoding="utf-8") as fh:
+            fh.write(line + "\n")
 
 
 def _sh(cmd: list[str], cwd: Path, timeout: int, env: Optional[dict] = None) -> subprocess.CompletedProcess:
@@ -186,9 +210,13 @@ def _convert_files_parallel(seed_for: Any, files: list[str], runs_dir: Path, sta
         ts = None
         while attempts <= retries and ts is None:
             wk = runs_dir / ("wk_" + f.replace("/", "_"))
+            prof("setup_start", file=f, attempt=attempts)
             _lightcopy(seed_for(f), wk)
+            prof("worker_start", file=f, attempt=attempts)
             last = _run_worker(_prompt_one_file(f, converted_deps_of(f), pristine), wk, state_dir, model, timeout)
+            prof("worker_end", file=f, attempt=attempts, rc=last["rc"], worker_s=last["duration_s"])
             ts = _harvest(wk, f)
+            prof("harvest_end", file=f, attempt=attempts, got_ts=bool(ts))
             shutil.rmtree(wk, ignore_errors=True)
             total_s += last["duration_s"]
             attempts += 1
@@ -211,7 +239,8 @@ def arm_durable(base: Path, sel: dict, runs_dir: Path, state_dir: Path,
     direct = sel["direct_deps"]
     steps: list[ArmStep] = []
     converted: set[str] = set()
-    for layer in sel["layers"]:
+    for li, layer in enumerate(sel["layers"]):
+        prof("layer_start", layer=li, width=len(layer))
         results = _convert_files_parallel(
             seed_for=lambda f: shared, files=layer, runs_dir=runs_dir, state_dir=state_dir,
             model=model, timeout=timeout, max_workers=max_workers,
@@ -222,9 +251,11 @@ def arm_durable(base: Path, sel: dict, runs_dir: Path, state_dir: Path,
                 _apply_conversion(shared, f, results[f]["ts"])
                 converted.add(f)
             steps.append(results[f]["step"])
+        prof("commit_start", layer=li, width=len(layer))
         _sh(["git", "add", "-A"], shared, timeout=120)
         _sh(["git", "-c", "user.email=lwds@local", "-c", "user.name=lwds", "commit", "-q",
              "-m", f"durable: layer of {len(layer)} module(s)"], shared, timeout=120)
+        prof("commit_end", layer=li)
     return shared, steps, 1  # durable peak working set ~= one module at a time
 
 
@@ -306,15 +337,22 @@ def main(argv: Optional[list[str]] = None) -> int:
                       arm=args.arm, seed=args.seed, scope_size=sel["scope_size"],
                       scope=sel["scope"], model=args.model, status="running")
     t0 = time.time()
+    prof("base_build_start", trial=trial_id, scope=sel["scope_size"],
+         n_layers=sel["n_layers"], max_layer_width=sel["max_layer_width"], max_workers=args.max_workers)
     base = make_base(mirror, profile, runs_dir)
+    prof("base_build_end")
 
     fn = ARMS[args.arm]
+    prof("arm_start", arm=args.arm)
     if args.arm == "monolith":
         tree, steps, peak = fn(base, sel["scope"], runs_dir, state_dir, args.model, args.timeout)
     else:
         tree, steps, peak = fn(base, sel, runs_dir, state_dir, args.model, args.timeout, args.max_workers)
+    prof("arm_end", arm=args.arm)
 
+    prof("score_start")
     verdict = score(tree, sel)
+    prof("score_end")
     drr = discovery_reuse(tree, sel)
 
     rec.steps = steps

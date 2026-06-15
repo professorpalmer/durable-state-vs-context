@@ -7,6 +7,10 @@ pm-state/
 node_modules/
 .codegraph/
 
+# Frozen Puppetmaster engine snapshot (vendored copy of PM @ af67d35, ~49M).
+# Regenerable from the pinned commit; never tracked.
+.pm-engine/
+
 # Large raw logs (full mocha/tsc transcripts). Curated evidence lives in results/.
 logs/
 

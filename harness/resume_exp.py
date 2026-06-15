@@ -34,7 +34,8 @@ import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-PM_ROOT = Path("/Users/cary/Desktop/Puppetmaster")
+# Frozen PM engine (pinned af67d35) — isolated from the live PM dev tree. See run_arm.py.
+PM_ROOT = Path("/Users/cary/lwds/.pm-engine")
 sys.path.insert(0, str(HERE))
 import select_scope  # noqa: E402
 import run_arm as R  # noqa: E402

@@ -1,0 +1,23 @@
+{"t": 0.007, "event": "base_build_start", "trial": "express-PILOT-durable-s0-5c0c9c", "scope": 7, "n_layers": 4, "max_layer_width": 3, "max_workers": 4}
+{"t": 16.885, "event": "base_build_end"}
+{"t": 16.885, "event": "arm_start", "arm": "durable"}
+{"t": 17.051, "event": "layer_start", "layer": 0, "width": 3}
+{"t": 17.051, "event": "setup_start", "file": "lib/request.js", "attempt": 0}
+{"t": 17.051, "event": "setup_start", "file": "lib/utils.js", "attempt": 0}
+{"t": 17.052, "event": "setup_start", "file": "lib/view.js", "attempt": 0}
+{"t": 17.217, "event": "worker_start", "file": "lib/view.js", "attempt": 0}
+{"t": 17.217, "event": "worker_start", "file": "lib/utils.js", "attempt": 0}
+{"t": 17.217, "event": "worker_start", "file": "lib/request.js", "attempt": 0}
+{"t": 70.535, "event": "worker_end", "file": "lib/view.js", "attempt": 0, "rc": 0, "worker_s": 53.3}
+{"t": 70.536, "event": "harvest_end", "file": "lib/view.js", "attempt": 0, "got_ts": true}
+{"t": 103.988, "event": "worker_end", "file": "lib/utils.js", "attempt": 0, "rc": 0, "worker_s": 86.8}
+{"t": 103.988, "event": "harvest_end", "file": "lib/utils.js", "attempt": 0, "got_ts": true}
+{"t": 153.177, "event": "worker_end", "file": "lib/request.js", "attempt": 0, "rc": 0, "worker_s": 136.0}
+{"t": 153.177, "event": "harvest_end", "file": "lib/request.js", "attempt": 0, "got_ts": true}
+{"t": 153.198, "event": "commit_start", "layer": 0, "width": 3}
+{"t": 153.258, "event": "commit_end", "layer": 0}
+{"t": 153.258, "event": "layer_start", "layer": 1, "width": 2}
+{"t": 153.258, "event": "setup_start", "file": "lib/application.js", "attempt": 0}
+{"t": 153.258, "event": "setup_start", "file": "lib/response.js", "attempt": 0}
+{"t": 153.373, "event": "worker_start", "file": "lib/application.js", "attempt": 0}
+{"t": 153.376, "event": "worker_start", "file": "lib/response.js", "attempt": 0}
