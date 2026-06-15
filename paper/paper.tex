@@ -95,9 +95,11 @@
 State
 Architecture}\label{state-not-tokens-repository-scale-agent-reasoning-is-bound-by-state-architecture}
 
-\textbf{Working draft --- professorpalmer. Numbers marked
-\texttt{{[}live{]}} are still being collected; this draft reports only
-what the hardened oracle has actually verified.}
+\textbf{Preprint. All reported numbers are produced by the
+machine-checkable oracle and are reproducible from the public code and
+data: \url{https://github.com/professorpalmer/durable-state-vs-context}
+and
+\url{https://huggingface.co/datasets/CaryPalmer/durable-vs-context-trials}.}
 
 \subsection{Abstract}\label{abstract}
 
@@ -370,12 +372,13 @@ But at the \textbf{full 364-module \texttt{lib/} tree the one-shot
 architecture degrades}: it still converts everything and gets the test
 suite green with zero escape hatches, yet leaves \textbf{16 residual
 strict-type errors} (\texttt{TS2322} assignability ×8, \texttt{TS2571}
-``object is of type `unknown'\,'' ×7), concentrated in the single
-hardest module (\texttt{XMLHttpRequest-impl}). Notably it failed
-\emph{safely} --- it reached for \texttt{unknown}, not \texttt{any} ---
-but ran out of capacity to globally narrow types at full scale. This is
-a \textbf{capacity} failure (correctness under a single global view),
-categorically different from RAG's failure mode below.
+``object is of type `unknown'\,'' ×7, \texttt{TS2339} ×1), concentrated
+in the single hardest module (\texttt{XMLHttpRequest-impl}). Notably it
+failed \emph{safely} --- it reached for \texttt{unknown}, not
+\texttt{any} --- but ran out of capacity to globally narrow types at
+full scale. This is a \textbf{capacity} failure (correctness under a
+single global view), categorically different from RAG's failure mode
+below.
 
 \textbf{Durable at the same 364 scale (capstone).} Durable decomposition
 converted all 364 modules (364 workers, \textasciitilde3.2 h) and its
@@ -508,8 +511,9 @@ reading
 colliding top-level declarations / inconsistent shared types → merged
 tree won't compile \\
 \textbf{capacity} & monolith (364) & \texttt{TS2322} ×8, \texttt{TS2571}
-un-narrowed \texttt{unknown} ×7 & global view, but can't maintain strict
-correctness on the hardest module at full scale \\
+un-narrowed \texttt{unknown} ×7, \texttt{TS2339} ×1 (16 total) & global
+view, but can't maintain strict correctness on the hardest module at
+full scale \\
 (none) & durable & --- & shared state removes conflicts; decomposition
 bounds per-worker complexity \\
 \end{longtable}

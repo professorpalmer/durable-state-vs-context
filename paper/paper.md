@@ -1,7 +1,8 @@
 # State, Not Tokens: Repository-Scale Agent Reasoning Is Bound by State Architecture
 
-**Working draft — professorpalmer. Numbers marked `[live]` are still being collected;
-this draft reports only what the hardened oracle has actually verified.**
+**Preprint. All reported numbers are produced by the machine-checkable oracle and are
+reproducible from the public code and data: <https://github.com/professorpalmer/durable-state-vs-context>
+and <https://huggingface.co/datasets/CaryPalmer/durable-vs-context-trials>.**
 
 ## Abstract
 
@@ -194,7 +195,7 @@ reframes the contribution away from "state beats context for a single agent."
 But at the **full 364-module `lib/` tree the one-shot architecture degrades**: it
 still converts everything and gets the test suite green with zero escape hatches,
 yet leaves **16 residual strict-type errors** (`TS2322` assignability ×8, `TS2571`
-"object is of type 'unknown'" ×7), concentrated in the single hardest module
+"object is of type 'unknown'" ×7, `TS2339` ×1), concentrated in the single hardest module
 (`XMLHttpRequest-impl`). Notably it failed *safely* — it reached for `unknown`,
 not `any` — but ran out of capacity to globally narrow types at full scale. This
 is a **capacity** failure (correctness under a single global view), categorically
@@ -255,7 +256,7 @@ failing trials):
 | failure mode | arm | signature codes | reading |
 | --- | --- | --- | --- |
 | **conflict** | stateless-RAG | `TS2451` redeclare ×10, `TS2717`, `TS2430`, `TS2739` | blind workers emit colliding top-level declarations / inconsistent shared types → merged tree won't compile |
-| **capacity** | monolith (364) | `TS2322` ×8, `TS2571` un-narrowed `unknown` ×7 | global view, but can't maintain strict correctness on the hardest module at full scale |
+| **capacity** | monolith (364) | `TS2322` ×8, `TS2571` un-narrowed `unknown` ×7, `TS2339` ×1 (16 total) | global view, but can't maintain strict correctness on the hardest module at full scale |
 | (none) | durable | — | shared state removes conflicts; decomposition bounds per-worker complexity |
 
 `TS2451` ("cannot redeclare block-scoped variable") appears **only** in the RAG
