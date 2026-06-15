@@ -1,0 +1,104 @@
+{"t": 0.254, "event": "base_build_start", "trial": "jsdom-FULL-durable-s0-a6d2b3", "scope": 364, "n_layers": 13, "max_layer_width": 78, "max_workers": 8}
+{"t": 8.701, "event": "base_build_end"}
+{"t": 8.701, "event": "arm_start", "arm": "durable"}
+{"t": 9.241, "event": "layer_start", "layer": 0, "width": 71}
+{"t": 9.241, "event": "setup_start", "file": "lib/jsdom/browser/not-implemented.js", "attempt": 0}
+{"t": 9.241, "event": "setup_start", "file": "lib/jsdom/browser/resources/async-resource-queue.js", "attempt": 0}
+{"t": 9.241, "event": "setup_start", "file": "lib/jsdom/browser/resources/decompress-interceptor.js", "attempt": 0}
+{"t": 9.241, "event": "setup_start", "file": "lib/jsdom/browser/resources/request-manager.js", "attempt": 0}
+{"t": 9.241, "event": "setup_start", "file": "lib/jsdom/browser/resources/resource-queue.js", "attempt": 0}
+{"t": 9.242, "event": "setup_start", "file": "lib/jsdom/browser/resources/stream-handler.js", "attempt": 0}
+{"t": 9.242, "event": "setup_start", "file": "lib/jsdom/level3/xpath.js", "attempt": 0}
+{"t": 9.243, "event": "setup_start", "file": "lib/jsdom/living/aborting/AbortController-impl.js", "attempt": 0}
+{"t": 11.761, "event": "worker_start", "file": "lib/jsdom/browser/resources/async-resource-queue.js", "attempt": 0}
+{"t": 11.763, "event": "worker_start", "file": "lib/jsdom/browser/resources/decompress-interceptor.js", "attempt": 0}
+{"t": 11.763, "event": "worker_start", "file": "lib/jsdom/level3/xpath.js", "attempt": 0}
+{"t": 11.763, "event": "worker_start", "file": "lib/jsdom/browser/resources/stream-handler.js", "attempt": 0}
+{"t": 11.763, "event": "worker_start", "file": "lib/jsdom/browser/resources/resource-queue.js", "attempt": 0}
+{"t": 11.763, "event": "worker_start", "file": "lib/jsdom/living/aborting/AbortController-impl.js", "attempt": 0}
+{"t": 11.763, "event": "worker_start", "file": "lib/jsdom/browser/not-implemented.js", "attempt": 0}
+{"t": 11.763, "event": "worker_start", "file": "lib/jsdom/browser/resources/request-manager.js", "attempt": 0}
+{"t": 46.213, "event": "worker_end", "file": "lib/jsdom/browser/resources/request-manager.js", "attempt": 0, "rc": 0, "worker_s": 34.4}
+{"t": 46.213, "event": "harvest_end", "file": "lib/jsdom/browser/resources/request-manager.js", "attempt": 0, "got_ts": true}
+{"t": 46.618, "event": "setup_start", "file": "lib/jsdom/living/constraint-validation/ValidityState-impl.js", "attempt": 0}
+{"t": 47.375, "event": "worker_start", "file": "lib/jsdom/living/constraint-validation/ValidityState-impl.js", "attempt": 0}
+{"t": 68.391, "event": "worker_end", "file": "lib/jsdom/living/aborting/AbortController-impl.js", "attempt": 0, "rc": 0, "worker_s": 56.6}
+{"t": 68.391, "event": "harvest_end", "file": "lib/jsdom/living/aborting/AbortController-impl.js", "attempt": 0, "got_ts": true}
+{"t": 68.894, "event": "setup_start", "file": "lib/jsdom/living/crypto/Crypto-impl.js", "attempt": 0}
+{"t": 69.634, "event": "worker_start", "file": "lib/jsdom/living/crypto/Crypto-impl.js", "attempt": 0}
+{"t": 75.597, "event": "worker_end", "file": "lib/jsdom/browser/resources/stream-handler.js", "attempt": 0, "rc": 0, "worker_s": 63.8}
+{"t": 75.597, "event": "harvest_end", "file": "lib/jsdom/browser/resources/stream-handler.js", "attempt": 0, "got_ts": true}
+{"t": 76.27, "event": "setup_start", "file": "lib/jsdom/living/css/CSSRule-impl.js", "attempt": 0}
+{"t": 77.031, "event": "worker_start", "file": "lib/jsdom/living/css/CSSRule-impl.js", "attempt": 0}
+{"t": 77.921, "event": "worker_end", "file": "lib/jsdom/browser/resources/async-resource-queue.js", "attempt": 0, "rc": 0, "worker_s": 66.2}
+{"t": 77.921, "event": "harvest_end", "file": "lib/jsdom/browser/resources/async-resource-queue.js", "attempt": 0, "got_ts": true}
+{"t": 78.44, "event": "setup_start", "file": "lib/jsdom/living/css/ElementCSSInlineStyle-impl.js", "attempt": 0}
+{"t": 79.21, "event": "worker_start", "file": "lib/jsdom/living/css/ElementCSSInlineStyle-impl.js", "attempt": 0}
+{"t": 79.266, "event": "worker_end", "file": "lib/jsdom/browser/not-implemented.js", "attempt": 0, "rc": 0, "worker_s": 67.5}
+{"t": 79.266, "event": "harvest_end", "file": "lib/jsdom/browser/not-implemented.js", "attempt": 0, "got_ts": true}
+{"t": 79.83, "event": "setup_start", "file": "lib/jsdom/living/css/StyleSheet-impl.js", "attempt": 0}
+{"t": 80.591, "event": "worker_start", "file": "lib/jsdom/living/css/StyleSheet-impl.js", "attempt": 0}
+{"t": 92.935, "event": "worker_end", "file": "lib/jsdom/browser/resources/resource-queue.js", "attempt": 0, "rc": 0, "worker_s": 81.2}
+{"t": 92.935, "event": "harvest_end", "file": "lib/jsdom/browser/resources/resource-queue.js", "attempt": 0, "got_ts": true}
+{"t": 93.457, "event": "setup_start", "file": "lib/jsdom/living/css/StyleSheetList-impl.js", "attempt": 0}
+{"t": 94.213, "event": "worker_start", "file": "lib/jsdom/living/css/StyleSheetList-impl.js", "attempt": 0}
+{"t": 104.048, "event": "worker_end", "file": "lib/jsdom/browser/resources/decompress-interceptor.js", "attempt": 0, "rc": 0, "worker_s": 92.3}
+{"t": 104.048, "event": "harvest_end", "file": "lib/jsdom/browser/resources/decompress-interceptor.js", "attempt": 0, "got_ts": true}
+{"t": 104.496, "event": "setup_start", "file": "lib/jsdom/living/css/helpers/patched-csstree.js", "attempt": 0}
+{"t": 105.274, "event": "worker_start", "file": "lib/jsdom/living/css/helpers/patched-csstree.js", "attempt": 0}
+{"t": 111.336, "event": "worker_end", "file": "lib/jsdom/living/constraint-validation/ValidityState-impl.js", "attempt": 0, "rc": 0, "worker_s": 64.0}
+{"t": 111.336, "event": "harvest_end", "file": "lib/jsdom/living/constraint-validation/ValidityState-impl.js", "attempt": 0, "got_ts": true}
+{"t": 111.792, "event": "setup_start", "file": "lib/jsdom/living/css/helpers/system-colors.js", "attempt": 0}
+{"t": 112.62, "event": "worker_start", "file": "lib/jsdom/living/css/helpers/system-colors.js", "attempt": 0}
+{"t": 133.01, "event": "worker_end", "file": "lib/jsdom/living/crypto/Crypto-impl.js", "attempt": 0, "rc": 0, "worker_s": 63.4}
+{"t": 133.011, "event": "harvest_end", "file": "lib/jsdom/living/crypto/Crypto-impl.js", "attempt": 0, "got_ts": true}
+{"t": 133.406, "event": "setup_start", "file": "lib/jsdom/living/deviceorientation/DeviceMotionEventAcceleration-impl.js", "attempt": 0}
+{"t": 134.106, "event": "worker_start", "file": "lib/jsdom/living/deviceorientation/DeviceMotionEventAcceleration-impl.js", "attempt": 0}
+{"t": 142.489, "event": "worker_end", "file": "lib/jsdom/living/css/StyleSheet-impl.js", "attempt": 0, "rc": 0, "worker_s": 61.9}
+{"t": 142.489, "event": "harvest_end", "file": "lib/jsdom/living/css/StyleSheet-impl.js", "attempt": 0, "got_ts": true}
+{"t": 142.979, "event": "setup_start", "file": "lib/jsdom/living/deviceorientation/DeviceMotionEventRotationRate-impl.js", "attempt": 0}
+{"t": 143.793, "event": "worker_start", "file": "lib/jsdom/living/deviceorientation/DeviceMotionEventRotationRate-impl.js", "attempt": 0}
+{"t": 157.798, "event": "worker_end", "file": "lib/jsdom/living/css/CSSRule-impl.js", "attempt": 0, "rc": 0, "worker_s": 80.8}
+{"t": 157.798, "event": "harvest_end", "file": "lib/jsdom/living/css/CSSRule-impl.js", "attempt": 0, "got_ts": true}
+{"t": 158.209, "event": "setup_start", "file": "lib/jsdom/living/documents.js", "attempt": 0}
+{"t": 159.04, "event": "worker_start", "file": "lib/jsdom/living/documents.js", "attempt": 0}
+{"t": 163.531, "event": "worker_end", "file": "lib/jsdom/living/css/ElementCSSInlineStyle-impl.js", "attempt": 0, "rc": 0, "worker_s": 84.3}
+{"t": 163.531, "event": "harvest_end", "file": "lib/jsdom/living/css/ElementCSSInlineStyle-impl.js", "attempt": 0, "got_ts": true}
+{"t": 163.984, "event": "setup_start", "file": "lib/jsdom/living/domparsing/XMLSerializer-impl.js", "attempt": 0}
+{"t": 164.782, "event": "worker_start", "file": "lib/jsdom/living/domparsing/XMLSerializer-impl.js", "attempt": 0}
+{"t": 165.937, "event": "worker_end", "file": "lib/jsdom/living/css/StyleSheetList-impl.js", "attempt": 0, "rc": 0, "worker_s": 71.7}
+{"t": 165.937, "event": "harvest_end", "file": "lib/jsdom/living/css/StyleSheetList-impl.js", "attempt": 0, "got_ts": true}
+{"t": 166.596, "event": "setup_start", "file": "lib/jsdom/living/encoding/TextDecoder-impl.js", "attempt": 0}
+{"t": 167.388, "event": "worker_start", "file": "lib/jsdom/living/encoding/TextDecoder-impl.js", "attempt": 0}
+{"t": 168.077, "event": "worker_end", "file": "lib/jsdom/living/css/helpers/patched-csstree.js", "attempt": 0, "rc": 0, "worker_s": 62.8}
+{"t": 168.077, "event": "harvest_end", "file": "lib/jsdom/living/css/helpers/patched-csstree.js", "attempt": 0, "got_ts": true}
+{"t": 168.568, "event": "setup_start", "file": "lib/jsdom/living/events/Event-impl.js", "attempt": 0}
+{"t": 169.425, "event": "worker_start", "file": "lib/jsdom/living/events/Event-impl.js", "attempt": 0}
+{"t": 176.534, "event": "worker_end", "file": "lib/jsdom/living/css/helpers/system-colors.js", "attempt": 0, "rc": 0, "worker_s": 63.9}
+{"t": 176.535, "event": "harvest_end", "file": "lib/jsdom/living/css/helpers/system-colors.js", "attempt": 0, "got_ts": true}
+{"t": 177.187, "event": "setup_start", "file": "lib/jsdom/living/events/EventModifierMixin-impl.js", "attempt": 0}
+{"t": 177.942, "event": "worker_start", "file": "lib/jsdom/living/events/EventModifierMixin-impl.js", "attempt": 0}
+{"t": 195.353, "event": "worker_end", "file": "lib/jsdom/living/deviceorientation/DeviceMotionEventAcceleration-impl.js", "attempt": 0, "rc": 0, "worker_s": 61.2}
+{"t": 195.353, "event": "harvest_end", "file": "lib/jsdom/living/deviceorientation/DeviceMotionEventAcceleration-impl.js", "attempt": 0, "got_ts": true}
+{"t": 195.895, "event": "setup_start", "file": "lib/jsdom/living/fetch/header-list.js", "attempt": 0}
+{"t": 196.591, "event": "worker_start", "file": "lib/jsdom/living/fetch/header-list.js", "attempt": 0}
+{"t": 219.137, "event": "worker_end", "file": "lib/jsdom/living/documents.js", "attempt": 0, "rc": 0, "worker_s": 60.1}
+{"t": 219.138, "event": "harvest_end", "file": "lib/jsdom/living/documents.js", "attempt": 0, "got_ts": true}
+{"t": 219.779, "event": "setup_start", "file": "lib/jsdom/living/fetch/header-types.js", "attempt": 0}
+{"t": 220.548, "event": "worker_start", "file": "lib/jsdom/living/fetch/header-types.js", "attempt": 0}
+{"t": 230.119, "event": "worker_end", "file": "lib/jsdom/living/fetch/header-list.js", "attempt": 0, "rc": 0, "worker_s": 33.5}
+{"t": 230.119, "event": "harvest_end", "file": "lib/jsdom/living/fetch/header-list.js", "attempt": 0, "got_ts": true}
+{"t": 230.615, "event": "setup_start", "file": "lib/jsdom/living/fetch/header-utils.js", "attempt": 0}
+{"t": 232.611, "event": "worker_start", "file": "lib/jsdom/living/fetch/header-utils.js", "attempt": 0}
+{"t": 263.164, "event": "worker_end", "file": "lib/jsdom/living/deviceorientation/DeviceMotionEventRotationRate-impl.js", "attempt": 0, "rc": 0, "worker_s": 119.4}
+{"t": 263.165, "event": "harvest_end", "file": "lib/jsdom/living/deviceorientation/DeviceMotionEventRotationRate-impl.js", "attempt": 0, "got_ts": true}
+{"t": 263.9, "event": "setup_start", "file": "lib/jsdom/living/file-api/FileList-impl.js", "attempt": 0}
+{"t": 264.63, "event": "worker_start", "file": "lib/jsdom/living/file-api/FileList-impl.js", "attempt": 0}
+{"t": 267.648, "event": "worker_end", "file": "lib/jsdom/living/events/EventModifierMixin-impl.js", "attempt": 0, "rc": 0, "worker_s": 89.7}
+{"t": 267.648, "event": "harvest_end", "file": "lib/jsdom/living/events/EventModifierMixin-impl.js", "attempt": 0, "got_ts": true}
+{"t": 268.167, "event": "setup_start", "file": "lib/jsdom/living/geometry/DOMRectReadOnly-impl.js", "attempt": 0}
+{"t": 268.989, "event": "worker_start", "file": "lib/jsdom/living/geometry/DOMRectReadOnly-impl.js", "attempt": 0}
+{"t": 270.147, "event": "worker_end", "file": "lib/jsdom/living/geometry/DOMRectReadOnly-impl.js", "attempt": 0, "rc": -15, "worker_s": 1.2}
+{"t": 270.148, "event": "worker_end", "file": "lib/jsdom/living/file-api/FileList-impl.js", "attempt": 0, "rc": -15, "worker_s": 5.5}
+{"t": 270.148, "event": "worker_end", "file": "lib/jsdom/living/fetch/header-utils.js", "attempt": 0, "rc": -15, "worker_s": 37.5}
+{"t": 270.148, "event": "harvest_end", "file": "lib/jsdom/living/fetch/header-utils.js", "attempt": 0, "got_ts": false}

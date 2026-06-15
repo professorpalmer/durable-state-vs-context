@@ -90,29 +90,39 @@ Conversions are decoupled from scoring; all trees are re-scored by the current o
 
 ## Concurrency ceiling (parallelism soak) — durable's speed is platform-bound, not design-bound
 
-We ran a clean **5-point concurrency sweep** on durable FULL(364) on the frozen engine to test
-the "just send 20× workers" intuition. Single-run success rates (worker produced a `.ts`), each
-run contamination-checked (`base_build_start == 1`):
+We ran a **replicated concurrency sweep** on durable FULL(364) on the frozen engine to test the
+"just send 20× workers" intuition. Every point uses an *identical* protocol — a fixed 240 s
+steady-state window, each run contamination-checked (`base_build_start == 1`) and quality-gated
+for a complete window (`harness/ksweep_rigorous.py` + `aggregate_sweep.py`). Success = worker
+produced a `.ts`. Mean ± 95% CI (Student-t) over **n=5–10 replicates** per point (34 runs
+admitted, 1 incomplete-window run rejected):
 
-| concurrency | success rate | implied session cap K | failure mode |
-| --- | --- | --- | --- |
-| C=8  | 91% (48/53) | ~7.3 | fast (<20s) no-diff no-ops |
-| C=12 | 96% (50/52) | ~11.5 | fast (<20s) no-diff no-ops |
-| C=16 | 70% (44/63) | ~11.2 | fast (<20s) no-diff no-ops |
-| C=24 | 29% (35/122) / 23% (30/131) | ~6.3 | heavy throttle |
-| C=32 | 34% (51/152) | ~10.7 | fast (<20s) no-diff no-ops |
+| concurrency | success (mean ± 95% CI) | n | K_eff | failure mode |
+| --- | --- | --- | --- | --- |
+| C=8  | 97% ± 5.7% | 10 | 7.8 | occasional non-throttle conversion miss |
+| C=12 | 99% ± 2.0% | 5 | 11.9 | — (at the cap) |
+| C=16 | 66% ± 2.7% | 5 | 10.5 | fast (<20s) no-diff no-ops |
+| C=24 | 28% ± 4.3% | 5 | 6.8 | heavy throttle |
+| C=32 | 19% ± 8.1% | 9 | 6.1 | heavy throttle |
 
-Success is high (>90%) below ~12 concurrent sessions and **collapses** above it. The collapse is
-real but **stochastic**, *not* a clean `min(1, K/C)` law: two independent C=24 runs (29%, 23%)
-both landed *below* the C=32 rate, and the implied K wanders between ~6 and ~12 across the sweep.
-We therefore report an **effective session cap K ≈ 10–12** rather than a precise constant — the
-Cursor API/SDK sustains on the order of ~10 concurrent agent sessions; excess workers are
-throttled into fast no-edit returns (median ~5–11s vs ~90–170s for a real conversion) that the
-`require_diff` gate rejects and the harness retries. This is a **Cursor-platform session cap, not
-a Puppetmaster orchestration failure** — PM spawned, leased, and retried every worker correctly,
-and durable state + retry absorbed the throttle (the run still converges, just inefficiently,
-wasting API calls on doomed attempts). Confirming the cap is platform-specific (not fundamental)
-needs a second, independent serving backend — the key remaining validation.
+Success is high (~97–99%) below ~12 concurrent sessions and **collapses monotonically** through a
+sharp knee. Reading the **effective admission cap** off the knee gives **K ≈ 10–12** (C=12
+K_eff=11.9, C=16 K_eff=10.5). Above the cap the rate falls *below* a `min(1, K/C)` reference —
+retry churn on throttled sessions inflates the denominator, so the collapsed regime is *steeper*
+than 1/C (K_eff drops to ~6 at C=24/32). The Cursor API/SDK sustains on the order of ~10
+concurrent agent sessions; excess workers are throttled into fast no-edit returns (<20s vs
+~90–170s for a real conversion) that the `require_diff` gate rejects and the harness retries.
+
+> **Methodology note / correction.** An earlier *single-run* probe per point (mixed stop-rules)
+> showed a spurious non-monotonicity (C=24 appearing below C=32). The replicated, uniform-window
+> sweep above eliminated it — the artifact was in the measurement, not the system. This is why
+> the curve is now monotone with tight CIs.
+
+This is a **Cursor-platform session cap, not a Puppetmaster orchestration failure** — PM spawned,
+leased, and retried every worker correctly, and durable state + retry absorbed the throttle (the
+run still converges, just inefficiently, wasting API calls on doomed attempts). Confirming the cap
+is platform-specific (not fundamental) needs a second, independent serving backend — the key
+remaining validation.
 
 **Implication for the scaling thesis.** The dataflow headroom is real (21.6× at FULL; critical
 path = 4.6% of total work) but only ~K≈10 of it is *usable* at once on this platform. At the

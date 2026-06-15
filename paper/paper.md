@@ -32,8 +32,9 @@ monolith by *capacity*, durable by neither. We also measure the limit of the
 parallelism this enables: the dependency critical path falls to **4.6% of total
 work** at full scale (so headroom *grows* with repo size), but *usable* concurrency
 is capped at an effective **K≈10–12** simultaneous agent sessions by the serving
-platform (a 5-point sweep; the over-cap success rate is stochastic), not by durable
-state — an orchestration constraint we localize and leave as future work.
+platform (a replicated n=5–10 sweep with 95% CIs; success collapses monotonically
+above the cap), not by durable state — an orchestration constraint we localize and
+leave as future work.
 The contribution is a reframing — *state is an asset, not a prompt* — with controls
 that isolate which capability actually matters.
 
@@ -326,22 +327,26 @@ total work as the DAG broadens (max layer width 5 → 78 across the sweep):
 | 60 | 20% | 4.9× |
 | **364** | **4.6%** | **21.6×** |
 
-So ~95% of full-scale work is parallelizable (Fig. `headroom_vs_scale`). But a clean
-**5-point concurrency sweep** on the *same* full-scale (364-module) durable run found a hard
-limit that is **not** durable state's. Worker success stays high below ~12 concurrent sessions
-(C=8 → 91% [48/53], C=12 → 96% [50/52]) and collapses above it (C=16 → 70% [44/63], C=32 → 34%
-[51/152]); the excess sessions are throttled into fast (<20 s vs ~90–170 s) no-edit returns.
-The collapse is real but **stochastic**: two independent C=24 runs returned 29% [35/122] and
-23% [30/131], *both below* the C=32 rate — so we report an **effective session cap of K≈10–12**,
-not a clean `min(1, K/C)` law (Fig. `concurrency_ceiling` plots the points scattering around a
-K=11 reference; the over-cap rate does not decline monotonically in C). We attribute the cap to
-the **Cursor API/SDK, not the orchestrator**: Puppetmaster spawned, leased, and retried every
-worker correctly, and durable state + retry *absorbed* the throttle (the run still converges).
-The consequence: at the practical ceiling, durable wall ≈ work/~11 ≈ 1.1 h vs the monolith's
-0.83 h — durable is ~1.3× *slower* on wall-clock while being the only arm that reaches a clean
-strict typecheck at full scale. The 21.6× theoretical headroom is real but only ~K of it is
-spendable at once today; closing that gap is an *orchestration* problem (§6 future work), not a
-property of durable state.
+So ~95% of full-scale work is parallelizable (Fig. `headroom_vs_scale`). But a **replicated
+concurrency sweep** on the *same* full-scale (364-module) durable run found a hard limit that is
+**not** durable state's. Each point is the mean ± 95% CI over n=5–10 quality-gated replicates,
+all measured with an *identical* protocol — a fixed 240 s steady-state window per run, every run
+contamination-checked (`base_build_start==1`) and required to complete the full window
+(Fig. `concurrency_ceiling`). Worker success is high below the cap (C=8 → 97% ±5.7, C=12 → 99%
+±2.0) and **collapses monotonically** through a sharp knee (C=16 → 66% ±2.7, C=24 → 28% ±4.3,
+C=32 → 19% ±8.1); the excess sessions are throttled into fast (<20 s vs ~90–170 s) no-edit
+returns. Reading the **effective admission cap** off the knee gives **K≈10–12** (C=12 K_eff=11.9,
+C=16 K_eff=10.5). Above the cap the rate falls *below* a `min(1, K/C)` reference: retry churn on
+throttled sessions inflates the denominator, so the collapsed regime is *steeper* than 1/C.
+(An earlier single-run probe showed a spurious non-monotonicity at C=24; replication with the
+uniform-window protocol showed it was a measurement artifact of mixed stop-rules, not a property
+of the system.) We attribute the cap to the **Cursor API/SDK, not the orchestrator**: Puppetmaster
+spawned, leased, and retried every worker correctly, and durable state + retry *absorbed* the
+throttle (the run still converges). The consequence: at the practical ceiling, durable wall ≈
+work/~11 ≈ 1.1 h vs the monolith's 0.83 h — durable is ~1.3× *slower* on wall-clock while being
+the only arm that reaches a clean strict typecheck at full scale. The 21.6× theoretical headroom
+is real but only ~K of it is spendable at once today; closing that gap is an *orchestration*
+problem (§6 future work), not a property of durable state.
 
 ## 5. Discussion
 - **Three advantages, one root.** Everything durable wins flows from a single property —
@@ -387,10 +392,10 @@ property of durable state.
   K≈10–12 concurrent agent sessions by the serving API, so the measured wall-clock does not
   yet realize the 21.6× dataflow headroom. This bounds the *speed* comparison (durable ~1.3×
   the monolith at full scale) but not the *correctness*, *resumability*, or *re-query*
-  results, none of which depend on concurrency. We ran a clean 5-point sweep at
-  C∈{8,12,16,24,32} (C=24 sampled twice) to isolate the cap; the over-cap success rate is
-  stochastic (two C=24 runs fell below the C=32 rate), so we report an effective cap rather
-  than a clean `min(1, K/C)` law. A second, independent serving backend — to confirm the cap
+  results, none of which depend on concurrency. We ran a **replicated** sweep at
+  C∈{8,12,16,24,32} (n=5–10 per point, uniform 240 s window, every run contamination-checked
+  and quality-gated for a complete window) and report mean ± 95% CI; the collapse is
+  monotone and tightly resolved. A second, independent serving backend — to confirm the cap
   is platform-specific rather than fundamental — remains the key open validation (it needs a
   non-Cursor agent backend; left as future work).
 

@@ -119,11 +119,11 @@ also measure the limit of the parallelism this enables: the dependency
 critical path falls to \textbf{4.6\% of total work} at full scale (so
 headroom \emph{grows} with repo size), but \emph{usable} concurrency is
 capped at an effective \textbf{K≈10--12} simultaneous agent sessions by
-the serving platform (a 5-point sweep; the over-cap success rate is
-stochastic), not by durable state --- an orchestration constraint we
-localize and leave as future work. The contribution is a reframing ---
-\emph{state is an asset, not a prompt} --- with controls that isolate
-which capability actually matters.
+the serving platform (a replicated n=5--10 sweep with 95\% CIs; success
+collapses monotonically above the cap), not by durable state --- an
+orchestration constraint we localize and leave as future work. The
+contribution is a reframing --- \emph{state is an asset, not a prompt}
+--- with controls that isolate which capability actually matters.
 
 \subsection{1. Introduction}\label{introduction}
 
@@ -672,27 +672,33 @@ scope & critical path / total work & dataflow speedup headroom \\
 }
 
 So \textasciitilde95\% of full-scale work is parallelizable (Fig.
-\texttt{headroom\_vs\_scale}). But a clean \textbf{5-point concurrency
+\texttt{headroom\_vs\_scale}). But a \textbf{replicated concurrency
 sweep} on the \emph{same} full-scale (364-module) durable run found a
-hard limit that is \textbf{not} durable state's. Worker success stays
-high below \textasciitilde12 concurrent sessions (C=8 → 91\%
-{[}48/53{]}, C=12 → 96\% {[}50/52{]}) and collapses above it (C=16 →
-70\% {[}44/63{]}, C=32 → 34\% {[}51/152{]}); the excess sessions are
-throttled into fast (\textless20 s vs \textasciitilde90--170 s) no-edit
-returns. The collapse is real but \textbf{stochastic}: two independent
-C=24 runs returned 29\% {[}35/122{]} and 23\% {[}30/131{]}, \emph{both
-below} the C=32 rate --- so we report an \textbf{effective session cap
-of K≈10--12}, not a clean \texttt{min(1,\ K/C)} law (Fig.
-\texttt{concurrency\_ceiling} plots the points scattering around a K=11
-reference; the over-cap rate does not decline monotonically in C). We
-attribute the cap to the \textbf{Cursor API/SDK, not the orchestrator}:
-Puppetmaster spawned, leased, and retried every worker correctly, and
-durable state + retry \emph{absorbed} the throttle (the run still
-converges). The consequence: at the practical ceiling, durable wall ≈
-work/\textasciitilde11 ≈ 1.1 h vs the monolith's 0.83 h --- durable is
-\textasciitilde1.3× \emph{slower} on wall-clock while being the only arm
-that reaches a clean strict typecheck at full scale. The 21.6×
-theoretical headroom is real but only \textasciitilde K of it is
+hard limit that is \textbf{not} durable state's. Each point is the mean
+± 95\% CI over n=5--10 quality-gated replicates, all measured with an
+\emph{identical} protocol --- a fixed 240 s steady-state window per run,
+every run contamination-checked (\texttt{base\_build\_start==1}) and
+required to complete the full window (Fig.
+\texttt{concurrency\_ceiling}). Worker success is high below the cap
+(C=8 → 97\% ±5.7, C=12 → 99\% ±2.0) and \textbf{collapses monotonically}
+through a sharp knee (C=16 → 66\% ±2.7, C=24 → 28\% ±4.3, C=32 → 19\%
+±8.1); the excess sessions are throttled into fast (\textless20 s vs
+\textasciitilde90--170 s) no-edit returns. Reading the \textbf{effective
+admission cap} off the knee gives \textbf{K≈10--12} (C=12 K\_eff=11.9,
+C=16 K\_eff=10.5). Above the cap the rate falls \emph{below} a
+\texttt{min(1,\ K/C)} reference: retry churn on throttled sessions
+inflates the denominator, so the collapsed regime is \emph{steeper} than
+1/C. (An earlier single-run probe showed a spurious non-monotonicity at
+C=24; replication with the uniform-window protocol showed it was a
+measurement artifact of mixed stop-rules, not a property of the system.)
+We attribute the cap to the \textbf{Cursor API/SDK, not the
+orchestrator}: Puppetmaster spawned, leased, and retried every worker
+correctly, and durable state + retry \emph{absorbed} the throttle (the
+run still converges). The consequence: at the practical ceiling, durable
+wall ≈ work/\textasciitilde11 ≈ 1.1 h vs the monolith's 0.83 h ---
+durable is \textasciitilde1.3× \emph{slower} on wall-clock while being
+the only arm that reaches a clean strict typecheck at full scale. The
+21.6× theoretical headroom is real but only \textasciitilde K of it is
 spendable at once today; closing that gap is an \emph{orchestration}
 problem (§6 future work), not a property of durable state.
 
@@ -772,14 +778,14 @@ problem (§6 future work), not a property of durable state.
   dataflow headroom. This bounds the \emph{speed} comparison (durable
   \textasciitilde1.3× the monolith at full scale) but not the
   \emph{correctness}, \emph{resumability}, or \emph{re-query} results,
-  none of which depend on concurrency. We ran a clean 5-point sweep at
-  C∈\{8,12,16,24,32\} (C=24 sampled twice) to isolate the cap; the
-  over-cap success rate is stochastic (two C=24 runs fell below the C=32
-  rate), so we report an effective cap rather than a clean
-  \texttt{min(1,\ K/C)} law. A second, independent serving backend ---
-  to confirm the cap is platform-specific rather than fundamental ---
-  remains the key open validation (it needs a non-Cursor agent backend;
-  left as future work).
+  none of which depend on concurrency. We ran a \textbf{replicated}
+  sweep at C∈\{8,12,16,24,32\} (n=5--10 per point, uniform 240 s window,
+  every run contamination-checked and quality-gated for a complete
+  window) and report mean ± 95\% CI; the collapse is monotone and
+  tightly resolved. A second, independent serving backend --- to confirm
+  the cap is platform-specific rather than fundamental --- remains the
+  key open validation (it needs a non-Cursor agent backend; left as
+  future work).
 \end{itemize}
 
 \subsection{6.1 Future work (orchestration track --- distinct from the

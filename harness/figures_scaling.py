@@ -36,52 +36,38 @@ def _success_rate(profile: Path) -> tuple[int, int]:
 
 
 def fig_ceiling() -> None:
-    # 5-point clean sweep (C=24 sampled twice to expose run-to-run variance).
-    # Each profile is a single, contamination-checked full-scope durable run.
-    probes = [
-        (8, "ksweep_c8.jsonl"),
-        (12, "ksweep_c12.jsonl"),
-        (16, "probe_c16_v2.jsonl"),
-        (24, "ksweep_c24_run1.jsonl"),
-        (24, "ksweep_c24.jsonl"),
-        (32, "sweep_c32_clean.jsonl"),
-    ]
-    pts = []
-    for c, prof in probes:
-        got, n = _success_rate(PROF / prof)
-        pts.append((c, got / n, f"{got}/{n}"))
-
-    cs = [p[0] for p in pts]
-    rates = [p[1] for p in pts]
-    # Reference (NOT a fit): effective session cap from the points that bracket the
-    # knee + the far-over-cap point. The measured points scatter around it because
-    # the throttle is stochastic — we show the reference to read off the cap, not to
-    # claim the data obey it.
-    K = 11.0
+    # Replicated sweep with a uniform fixed-window protocol (harness/ksweep_rigorous.py
+    # + aggregate_sweep.py). Each point is mean ± 95% CI (Student-t) over n quality-gated
+    # replicates (base_starts==1, full window, >=8 window workers).
+    agg = json.loads((ROOT / "results" / "sweep_aggregate.json").read_text())["aggregate"]
+    cs = sorted(int(c) for c in agg)
+    means = [agg[str(c)]["mean"] for c in cs]
+    cis = [agg[str(c)]["ci95"] for c in cs]
+    ns = [agg[str(c)]["n"] for c in cs]
+    K = 11.0  # reference admission cap, read off the knee (C=12 K_eff≈11.9, C=16≈10.5)
 
     fig, ax = plt.subplots(figsize=(6.6, 4.4))
     xs = [x * 0.25 for x in range(8, 144)]
     ax.plot(xs, [min(1.0, K / x) for x in xs], "--", color="#888",
             label=f"reference min(1, K/C), K={K:.0f}")
-    ax.scatter(cs, rates, color="#c0392b", s=80, zorder=3,
-               label="measured success rate (clean single run)")
-    for c, r, lab in pts:
-        ax.annotate(lab, (c, r), textcoords="offset points", xytext=(7, 6), fontsize=8)
-    # highlight the two C=24 samples as a variance bar
-    c24 = [r for c, r, _ in pts if c == 24]
-    ax.plot([24, 24], [min(c24), max(c24)], color="#c0392b", lw=1, alpha=0.5)
+    ax.errorbar(cs, means, yerr=cis, fmt="o", color="#c0392b", ms=8, lw=0,
+                elinewidth=1.8, capsize=4, ecolor="#c0392b", zorder=3,
+                label="measured: mean ± 95% CI")
+    for c, m, n in zip(cs, means, ns):
+        ax.annotate(f"{100*m:.0f}%\n(n={n})", (c, m), textcoords="offset points",
+                    xytext=(9, -2), fontsize=8, va="center")
     ax.axvspan(0, 12, color="#27ae60", alpha=0.05)
     ax.axvspan(16, 36, color="#c0392b", alpha=0.05)
-    ax.text(6, 0.12, "below cap:\n>90%", fontsize=8, color="#1e8449", ha="center")
-    ax.text(28, 0.78, "above cap: noisy\n~25–35% plateau", fontsize=8, color="#922b21", ha="center")
+    ax.text(6, 0.10, "below cap:\n~97–99%", fontsize=8, color="#1e8449", ha="center")
+    ax.text(28, 0.62, "above cap:\ncollapsed plateau", fontsize=8, color="#922b21", ha="center")
     ax.set_xlabel("requested worker concurrency  (C)")
     ax.set_ylabel("worker success rate  (produced .ts)")
     ax.set_title("Concurrency ceiling: success collapses above ~12 sessions\n"
-                 "(effective platform cap K≈10–12; over-cap rate is stochastic)")
-    ax.set_ylim(0, 1.05)
+                 "(effective admission cap K≈10–12; n=5–10 reps/point, 240 s window)")
+    ax.set_ylim(0, 1.08)
     ax.set_xlim(0, 36)
     ax.grid(alpha=0.3)
-    ax.legend(loc="center right", fontsize=9)
+    ax.legend(loc="upper right", fontsize=9)
     fig.tight_layout()
     p = FIGS / "concurrency_ceiling.png"
     fig.savefig(p, dpi=140)

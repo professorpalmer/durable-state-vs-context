@@ -26,3 +26,11 @@ __pycache__/
 pm-state-ksweep-*/
 runs-ksweep-*/
 results/ksweep_c*_trial.jsonl
+
+# Rigorous sweep ephemeral state (replicate profiles ARE tracked)
+pm-state-sweep-*/
+runs-sweep-*/
+results/sweep_*_trial.jsonl
+results/profiles/*.log
+results/profiles/ceiling_L_c16.jsonl
+results/profiles/probe_c16.jsonl

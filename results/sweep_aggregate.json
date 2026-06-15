@@ -1,0 +1,486 @@
+{
+  "window_s": 240,
+  "metric": "got_ts / worker_end (windowed)",
+  "quality_gates": {
+    "base_starts": 1,
+    "have_window": true,
+    "min_window_workers": 8
+  },
+  "n_admitted": 34,
+  "n_rejected": 1,
+  "rejected": [
+    {
+      "C": 32,
+      "rep": 1,
+      "ok": 14,
+      "total": 196,
+      "fast_fail": 159,
+      "rate": 0.07142857142857142,
+      "base_starts": 1,
+      "have_window": false,
+      "profile": "c32_r1.jsonl"
+    }
+  ],
+  "runs": [
+    {
+      "C": 12,
+      "rep": 1,
+      "ok": 26,
+      "total": 26,
+      "fast_fail": 0,
+      "rate": 1.0,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c12_r1.jsonl"
+    },
+    {
+      "C": 12,
+      "rep": 2,
+      "ok": 32,
+      "total": 32,
+      "fast_fail": 0,
+      "rate": 1.0,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c12_r2.jsonl"
+    },
+    {
+      "C": 12,
+      "rep": 3,
+      "ok": 30,
+      "total": 30,
+      "fast_fail": 0,
+      "rate": 1.0,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c12_r3.jsonl"
+    },
+    {
+      "C": 12,
+      "rep": 4,
+      "ok": 27,
+      "total": 28,
+      "fast_fail": 1,
+      "rate": 0.9642857142857143,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c12_r4.jsonl"
+    },
+    {
+      "C": 12,
+      "rep": 5,
+      "ok": 26,
+      "total": 26,
+      "fast_fail": 0,
+      "rate": 1.0,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c12_r5.jsonl"
+    },
+    {
+      "C": 16,
+      "rep": 1,
+      "ok": 31,
+      "total": 50,
+      "fast_fail": 19,
+      "rate": 0.62,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c16_r1.jsonl"
+    },
+    {
+      "C": 16,
+      "rep": 2,
+      "ok": 37,
+      "total": 55,
+      "fast_fail": 17,
+      "rate": 0.6727272727272727,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c16_r2.jsonl"
+    },
+    {
+      "C": 16,
+      "rep": 3,
+      "ok": 37,
+      "total": 57,
+      "fast_fail": 20,
+      "rate": 0.6491228070175439,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c16_r3.jsonl"
+    },
+    {
+      "C": 16,
+      "rep": 4,
+      "ok": 44,
+      "total": 66,
+      "fast_fail": 22,
+      "rate": 0.6666666666666666,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c16_r4.jsonl"
+    },
+    {
+      "C": 16,
+      "rep": 5,
+      "ok": 36,
+      "total": 54,
+      "fast_fail": 17,
+      "rate": 0.6666666666666666,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c16_r5.jsonl"
+    },
+    {
+      "C": 24,
+      "rep": 1,
+      "ok": 34,
+      "total": 147,
+      "fast_fail": 113,
+      "rate": 0.23129251700680273,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c24_r1.jsonl"
+    },
+    {
+      "C": 24,
+      "rep": 2,
+      "ok": 32,
+      "total": 118,
+      "fast_fail": 84,
+      "rate": 0.2711864406779661,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c24_r2.jsonl"
+    },
+    {
+      "C": 24,
+      "rep": 3,
+      "ok": 40,
+      "total": 137,
+      "fast_fail": 97,
+      "rate": 0.291970802919708,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c24_r3.jsonl"
+    },
+    {
+      "C": 24,
+      "rep": 4,
+      "ok": 37,
+      "total": 123,
+      "fast_fail": 86,
+      "rate": 0.3008130081300813,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c24_r4.jsonl"
+    },
+    {
+      "C": 24,
+      "rep": 5,
+      "ok": 43,
+      "total": 133,
+      "fast_fail": 90,
+      "rate": 0.3233082706766917,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c24_r5.jsonl"
+    },
+    {
+      "C": 32,
+      "rep": 10,
+      "ok": 22,
+      "total": 195,
+      "fast_fail": 173,
+      "rate": 0.11282051282051282,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c32_r10.jsonl"
+    },
+    {
+      "C": 32,
+      "rep": 2,
+      "ok": 26,
+      "total": 193,
+      "fast_fail": 156,
+      "rate": 0.13471502590673576,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c32_r2.jsonl"
+    },
+    {
+      "C": 32,
+      "rep": 3,
+      "ok": 29,
+      "total": 164,
+      "fast_fail": 128,
+      "rate": 0.17682926829268292,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c32_r3.jsonl"
+    },
+    {
+      "C": 32,
+      "rep": 4,
+      "ok": 21,
+      "total": 195,
+      "fast_fail": 174,
+      "rate": 0.1076923076923077,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c32_r4.jsonl"
+    },
+    {
+      "C": 32,
+      "rep": 5,
+      "ok": 53,
+      "total": 116,
+      "fast_fail": 63,
+      "rate": 0.45689655172413796,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c32_r5.jsonl"
+    },
+    {
+      "C": 32,
+      "rep": 6,
+      "ok": 35,
+      "total": 169,
+      "fast_fail": 134,
+      "rate": 0.20710059171597633,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c32_r6.jsonl"
+    },
+    {
+      "C": 32,
+      "rep": 7,
+      "ok": 32,
+      "total": 183,
+      "fast_fail": 151,
+      "rate": 0.17486338797814208,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c32_r7.jsonl"
+    },
+    {
+      "C": 32,
+      "rep": 8,
+      "ok": 29,
+      "total": 164,
+      "fast_fail": 135,
+      "rate": 0.17682926829268292,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c32_r8.jsonl"
+    },
+    {
+      "C": 32,
+      "rep": 9,
+      "ok": 26,
+      "total": 162,
+      "fast_fail": 136,
+      "rate": 0.16049382716049382,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c32_r9.jsonl"
+    },
+    {
+      "C": 8,
+      "rep": 1,
+      "ok": 18,
+      "total": 18,
+      "fast_fail": 0,
+      "rate": 1.0,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c8_r1.jsonl"
+    },
+    {
+      "C": 8,
+      "rep": 10,
+      "ok": 19,
+      "total": 19,
+      "fast_fail": 0,
+      "rate": 1.0,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c8_r10.jsonl"
+    },
+    {
+      "C": 8,
+      "rep": 2,
+      "ok": 18,
+      "total": 18,
+      "fast_fail": 0,
+      "rate": 1.0,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c8_r2.jsonl"
+    },
+    {
+      "C": 8,
+      "rep": 3,
+      "ok": 19,
+      "total": 19,
+      "fast_fail": 0,
+      "rate": 1.0,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c8_r3.jsonl"
+    },
+    {
+      "C": 8,
+      "rep": 4,
+      "ok": 17,
+      "total": 17,
+      "fast_fail": 0,
+      "rate": 1.0,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c8_r4.jsonl"
+    },
+    {
+      "C": 8,
+      "rep": 5,
+      "ok": 15,
+      "total": 20,
+      "fast_fail": 0,
+      "rate": 0.75,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c8_r5.jsonl"
+    },
+    {
+      "C": 8,
+      "rep": 6,
+      "ok": 13,
+      "total": 13,
+      "fast_fail": 0,
+      "rate": 1.0,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c8_r6.jsonl"
+    },
+    {
+      "C": 8,
+      "rep": 7,
+      "ok": 13,
+      "total": 13,
+      "fast_fail": 0,
+      "rate": 1.0,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c8_r7.jsonl"
+    },
+    {
+      "C": 8,
+      "rep": 8,
+      "ok": 17,
+      "total": 18,
+      "fast_fail": 1,
+      "rate": 0.9444444444444444,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c8_r8.jsonl"
+    },
+    {
+      "C": 8,
+      "rep": 9,
+      "ok": 18,
+      "total": 18,
+      "fast_fail": 0,
+      "rate": 1.0,
+      "base_starts": 1,
+      "have_window": true,
+      "profile": "c8_r9.jsonl"
+    }
+  ],
+  "aggregate": {
+    "8": {
+      "n": 10,
+      "mean": 0.9694,
+      "std": 0.0791,
+      "sem": 0.025,
+      "ci95": 0.0565,
+      "reps": [
+        0.75,
+        0.9444,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "K_eff": 7.76
+    },
+    "12": {
+      "n": 5,
+      "mean": 0.9929,
+      "std": 0.016,
+      "sem": 0.0071,
+      "ci95": 0.0198,
+      "reps": [
+        0.9643,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "K_eff": 11.91
+    },
+    "16": {
+      "n": 5,
+      "mean": 0.655,
+      "std": 0.0215,
+      "sem": 0.0096,
+      "ci95": 0.0267,
+      "reps": [
+        0.62,
+        0.6491,
+        0.6667,
+        0.6667,
+        0.6727
+      ],
+      "K_eff": 10.48
+    },
+    "24": {
+      "n": 5,
+      "mean": 0.2837,
+      "std": 0.0348,
+      "sem": 0.0155,
+      "ci95": 0.0432,
+      "reps": [
+        0.2313,
+        0.2712,
+        0.292,
+        0.3008,
+        0.3233
+      ],
+      "K_eff": 6.81
+    },
+    "32": {
+      "n": 9,
+      "mean": 0.1898,
+      "std": 0.1053,
+      "sem": 0.0351,
+      "ci95": 0.081,
+      "reps": [
+        0.1077,
+        0.1128,
+        0.1347,
+        0.1605,
+        0.1749,
+        0.1768,
+        0.1768,
+        0.2071,
+        0.4569
+      ],
+      "K_eff": 6.07
+    }
+  }
+}

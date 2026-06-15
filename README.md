@@ -36,9 +36,9 @@ The data supports the state-architecture framing, with calibrated honesty:
   re-query** — recalling a materialized discovery is a SQLite read, not an LLM call.
 - **Honest limit:** parallel *headroom* grows with repo size (critical path falls to
   **4.6%** of total work at full scale, 21.6× theoretical), but *usable* concurrency is
-  capped at an effective **K≈10–12** sessions by the serving platform (5-point sweep; the
-  over-cap rate is stochastic) — an orchestration ceiling, not a durable-state one. Closing it
-  is future work (admission control + dataflow scheduling).
+  capped at an effective **K≈10–12** sessions by the serving platform (replicated n=5–10 sweep,
+  mean ± 95% CI; success collapses monotonically above the cap) — an orchestration ceiling, not a
+  durable-state one. Closing it is future work (admission control + dataflow scheduling).
 
 ## Arms (one substrate, one dimension varied: how state flows between workers)
 
