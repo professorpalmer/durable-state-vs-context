@@ -13,7 +13,7 @@ _Last updated: 2026-06-15 (overnight autonomous run). Multi-seed at S/M; single 
 
 ## Primary outcome = `typecheck_strict` (static, unconfounded)
 
-The headline correctness axis is **strict static type-checking** (`tsc --noEmit`, no `any`/`@ts-ignore` past budget). It is deterministic, runtime-free, and identical across arms and scales. The runtime test gate (`tests_api`) is valid at S/M/L but becomes **confounded at XL+ jsdom scope** — see Threats below — so XL/FULL comparisons are made on `typecheck_strict` + `escape_hatches`, the gates jsdom's build system cannot perturb.
+The headline correctness axis is **strict static type-checking** (`tsc --noEmit`, no `any`/`@ts-ignore` past budget). It is deterministic, runtime-free, and identical across arms and scales. The runtime test gate (`tests_api`) is valid except on any trial whose scope includes jsdom's codegen-coupled `namespaces.js` helper — there it is **confounded** (see Threats below), so those comparisons are made on `typecheck_strict` + `escape_hatches`, the gates jsdom's build system cannot perturb.
 
 ## Outcome table (hardened oracle)
 
@@ -65,17 +65,19 @@ Conversions are decoupled from scoring; all trees are re-scored by the current o
 
 ## Threats to validity (honest)
 
-- **jsdom build-system coupling at XL+ scope.** jsdom's `npm run prepare` runs
-  `scripts/webidl/convert.js`, which `require()`s `lib/jsdom/living/helpers/namespaces.js`
-  **by literal `.js` path**. Once that helper enters scope and is converted to `.ts`, jsdom's own
-  IDL codegen fails (`Cannot find module namespaces.js`), which fails the *runtime* gates
-  (`tests_api`, and a stale-`.js` reappearance hitting `conversion_complete`). This affects
-  XL(120)+ scopes of jsdom for any arm; the monolith happened to be scored against an
-  already-codegen'd tree. We therefore treat `typecheck_strict` + `escape_hatches` as the
-  primary, build-agnostic outcome at XL+ and flag the runtime gate as confounded there. A
-  codegen-baked harness (run `prepare` on the pristine tree pre-conversion, exclude `scripts/`
-  and generated wrappers from scope) would remove the confound; logged as future work rather
-  than silently dropped.
+- **jsdom build-system coupling (scope-correlated, not scale-correlated).** jsdom's
+  `npm run prepare` runs `scripts/webidl/convert.js`, which `require()`s
+  `lib/jsdom/living/helpers/namespaces.js` **by literal `.js` path**. **Whenever that one
+  helper is in a trial's scope** and is converted to `.ts`, jsdom's own IDL codegen fails
+  (`Cannot find module namespaces.js`), failing the *runtime* gate `tests_api`. We confirmed
+  this is *exactly* correlated with scope membership: L-durable-s2 (namespaces.js ∈ scope) hit
+  the confound and L-durable-s1 (namespaces.js ∉ scope) did not — both at the same L(60) scale.
+  It is more likely at larger scope only because BFS eventually reaches the helper; it is a
+  *scope-membership* artifact, arm-independent, not a scale effect. We therefore treat
+  `typecheck_strict` + `escape_hatches` as the primary, build-agnostic outcome and flag
+  `tests_api` as confounded on any trial whose scope contains `namespaces.js`. A codegen-baked
+  harness (run `prepare` on the pristine tree pre-conversion, exclude `scripts/` and generated
+  wrappers from scope) removes the confound; logged as future work rather than silently dropped.
 - **Cursor-SDK token counts are unreliable** (implausibly low); we report wall-clock, worker
   count, and DRR instead of token deltas as the cost axis.
 

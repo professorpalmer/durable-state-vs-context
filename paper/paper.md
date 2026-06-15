@@ -218,15 +218,18 @@ resumable consistent checkpoints — not in out-muscling a navigating agent at m
   parallelize — not a universal "context is solved" claim.
 
 ## 6. Threats to validity
-- **jsdom build-system coupling at XL+ scope.** jsdom's `npm run prepare` runs
-  `scripts/webidl/convert.js`, which `require()`s `lib/jsdom/living/helpers/
-  namespaces.js` by *literal `.js` path*. Once that helper is converted to `.ts`,
-  jsdom's own IDL codegen fails, which fails the *runtime* gate (`tests_api`) and
-  resurfaces stale `.js`. This is a target build artifact, not a durable-arm
-  defect; we therefore make XL/FULL comparisons on the **static** axis
-  (`typecheck_strict` + `escape_hatches`), which jsdom's build cannot perturb, and
-  flag the runtime gate as confounded there. A codegen-baked harness (run `prepare`
-  on the pristine tree pre-conversion, exclude `scripts/` from scope) removes the
+- **jsdom build-system coupling (scope-correlated).** jsdom's `npm run prepare`
+  runs `scripts/webidl/convert.js`, which `require()`s
+  `lib/jsdom/living/helpers/namespaces.js` by *literal `.js` path*. On any trial
+  whose scope includes that one helper, converting it to `.ts` makes jsdom's own
+  IDL codegen fail, which fails the *runtime* gate (`tests_api`). We verified this
+  is *exactly* scope-membership-correlated (L-durable-s2 with namespaces.js ∈ scope
+  hit it; L-durable-s1 without it did not, same L(60) scale) — a target build
+  artifact, arm-independent, not a durable-arm defect and not a scale effect. We
+  therefore make affected comparisons on the **static** axis (`typecheck_strict` +
+  `escape_hatches`), which jsdom's build cannot perturb, and flag `tests_api` as
+  confounded on those trials. A codegen-baked harness (run `prepare` on the
+  pristine tree pre-conversion, exclude `scripts/` from scope) removes the
   confound; logged as future work rather than silently dropped.
 - One task family (migration); artifact == code. Generalization to
   reasoning-artifact tasks is future work.
