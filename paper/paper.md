@@ -17,19 +17,24 @@ accumulates each completed dependency layer as a committed artifact on a shared
 evolving tree, and a *stateless-RAG* arm whose per-file workers retrieve context
 but never see each other's results. We find: (1) a single modern agentic worker
 already scales much further than the naive context thesis predicts — it cleanly
-migrates **120** interdependent jsdom modules `[live: 240]` by navigating the
-filesystem on demand rather than cramming a working set into the prompt — cleanly
-migrating up to **240** interdependent jsdom modules — but it **does crack at the
-full 364-module tree**, leaving residual strict-type errors on the hardest module
-(a *capacity* failure, not a conversion failure); (2) when work is decomposed for
-parallelism, **durable accumulation strictly dominates stateless retrieval** —
+migrates up to **240** interdependent jsdom modules by navigating the filesystem on
+demand rather than cramming a working set into the prompt — but it **does crack at
+the full 364-module tree**, leaving residual strict-type errors on the hardest
+module (a *capacity* failure, not a conversion failure); (2) when work is decomposed
+for parallelism, **durable accumulation strictly dominates stateless retrieval** —
 RAG's independent workers emit code that does not even compile (`TS2451`
 redeclaration conflicts appear *only* in RAG), while durable does not; and (3)
-durable state confers a structural property no single transcript can:
-**interruption-resumable, consistent checkpoints**. A failure taxonomy shows three
-architectures fail in three distinct ways — RAG by *conflict*, monolith by
-*capacity*, durable by neither. The contribution is a reframing — *state is an
-asset, not a prompt* — with controls that isolate which capability actually matters.
+durable state confers two structural properties no single transcript can:
+**interruption-resumable consistent checkpoints**, and **zero-marginal-cost
+re-query** of any materialized discovery (a SQLite read, not an LLM call). A failure
+taxonomy shows three architectures fail in three distinct ways — RAG by *conflict*,
+monolith by *capacity*, durable by neither. We also measure the limit of the
+parallelism this enables: the dependency critical path falls to **4.6% of total
+work** at full scale (so headroom *grows* with repo size), but *usable* concurrency
+is capped at **K≈10–11** simultaneous agent sessions by the serving platform, not by
+durable state — an orchestration constraint we localize and leave as future work.
+The contribution is a reframing — *state is an asset, not a prompt* — with controls
+that isolate which capability actually matters.
 
 ## 1. Introduction
 
@@ -208,14 +213,72 @@ context window." The win is concentrated exactly where a single context is
 structurally insufficient — parallel decomposition without conflicts, and
 resumable consistent checkpoints — not in out-muscling a navigating agent at moderate scale.
 
+### 4.7 Re-query cost: zero LLM calls (the asset property, made literal)
+The defining property of an *asset* versus a *prompt* is that reuse cost → 0. Durable
+state has it exactly: once a discovery is **materialized as an artifact**, recalling
+it is a database read — **zero LLM invocations**. On a completed conversion job, the
+full structured result (gate verdict, changed files, strict-typecheck outcome, and the
+provenance that it reused a sibling's exported types) recalls in **<0.5 s with no model
+call**. We report the cross-arm re-query cost in **invocations**, not tokens — sidestepping
+the unreliable Cursor-SDK token counts with a categorical metric:
+
+| arm | cost to re-query a prior discovery | why |
+| --- | --- | --- |
+| **durable** | **0 invocations** (artifact read) | discoveries are durable system objects |
+| transcript | retain in-context (window-capped → fails at scale) **or** ≥1 (re-derive) | discoveries are transient text |
+| stateless-RAG | ≥1 invocation every time | re-retrieve + re-reason; nothing accumulates |
+
+DRR (§4.4) is the *empirical rate* of these zero-cost reuses: at the 364-module capstone,
+**86/293 dependency-bearing modules (29%)** consumed a prior worker's materialized artifact.
+**Honest boundary:** "zero" is for *recall* of an already-materialized result; a re-query
+needing genuinely new synthesis still pays the synthesis — but it starts from the artifact
+(no re-derivation of the base), strictly cheaper than transcript or RAG. For *this* task the
+materialized discovery is a `.ts` file on disk, so a navigating agent can also re-read it
+cheaply (§5); the property is most decisive for **non-code reasoning artifacts** (analyses,
+decisions, traces) that do not live in the tree — flagged as the highest-value generalization.
+
+### 4.8 Parallel headroom grows with scale, but usable concurrency is platform-capped
+Decomposition exposes parallelism, and the *available* parallelism **grows with repo size**:
+the dependency critical path (longest chain that must run serially) shrinks as a fraction of
+total work as the DAG broadens (max layer width 5 → 78 across the sweep):
+
+| scope | critical path / total work | dataflow speedup headroom |
+| --- | --- | --- |
+| 8 | 45% | 2.2× |
+| 24 | 21% | 4.8× |
+| 60 | 20% | 4.9× |
+| **364** | **4.6%** | **21.6×** |
+
+So ~95% of full-scale work is parallelizable (Fig. `headroom_vs_scale`). But a soak that
+raised requested concurrency on the *same* full-scale durable run found a hard limit that is
+**not** durable state's: worker success follows `min(1, K/C)` with **K≈10–11** (clean single
+runs: C=16 → 68%, C=32 → 33%; Fig. `concurrency_ceiling`). Beyond ~K concurrent sessions the
+serving platform throttles excess workers into fast (<20 s vs ~90–170 s) no-edit returns. We
+attribute this to the **Cursor API/SDK session cap, not the orchestrator**: Puppetmaster
+spawned, leased, and retried all 32 correctly, and durable state + retry *absorbed* the
+throttle (the run still converges). The consequence: at the practical ceiling, durable wall ≈
+work/10.6 ≈ 1.1 h vs the monolith's 0.83 h — durable is ~1.3× *slower* on wall-clock while
+being the only arm that reaches a clean strict typecheck at full scale. The 21.6× theoretical
+headroom is real but only ~K of it is spendable at once today; closing that gap is an
+*orchestration* problem (§6 future work), not a property of durable state.
+
 ## 5. Discussion
-- What durable state buys (measured): conflict-free decomposition; resumable
-  consistent checkpoints. What it does **not** buy for this task: raw single-agent
-  navigation is already strong, and for code-artifact tasks follow-up reuse is
-  filesystem-available to any navigating agent (we did not claim otherwise).
+- **Three advantages, one root.** Everything durable wins flows from a single property —
+  *discoveries are durable system objects, not disposable prompt text*: (1)
+  conflict-free parallel decomposition (§4.2–4.3); (2) interruption-resumable consistent
+  checkpoints (§4.5); (3) zero-marginal-cost re-query of materialized discoveries (§4.7).
+- What durable state does **not** buy for *this* task: raw single-agent navigation is
+  already strong at moderate scale, and because the migration artifact is code on disk,
+  re-reading a prior discovery is filesystem-cheap for any navigating agent too — so the
+  zero-cost-re-query advantage is *under-tested* here and is most decisive for non-code
+  reasoning artifacts. We do not claim otherwise.
 - Implication: the durable advantage is an *orchestration/coordination* property,
-  realized when one context is insufficient or work must survive interruption /
-  parallelize — not a universal "context is solved" claim.
+  realized when one context is insufficient, or work must survive interruption,
+  parallelize, or be revisited cheaply — not a universal "context is solved" claim.
+- **The speed gap is an orchestration ceiling, not a state-architecture one.** Durable's
+  ~1.3× wall-clock penalty at full scale (§4.8) is set by a platform session cap (K≈10–11),
+  not by accumulation; the theoretical 21.6× headroom says the *architecture* scales, and
+  realizing it is an engineering problem on the serving/scheduling side (§6).
 
 ## 6. Threats to validity
 - **jsdom build-system coupling (scope-correlated).** jsdom's `npm run prepare`
@@ -239,6 +302,26 @@ resumable consistent checkpoints — not in out-muscling a navigating agent at m
 - Cursor-SDK token counts are unreliable (implausibly low); we report wall-clock,
   worker count, and DRR as the cost axes instead of token deltas.
 - Single platform (Puppetmaster cursor workers); model routing held constant.
+- **Platform concurrency ceiling (§4.8).** Usable parallelism is capped at K≈10–11
+  concurrent agent sessions by the serving API, so the measured wall-clock does not yet
+  realize the 21.6× dataflow headroom. This bounds the *speed* comparison (durable ~1.3×
+  the monolith at full scale) but not the *correctness*, *resumability*, or *re-query*
+  results, none of which depend on concurrency. We probed clean single runs at C∈{4,16,32}
+  to isolate the cap; a wider sweep and a second serving backend are future work.
+
+## 6.1 Future work (orchestration track — distinct from the state-architecture claim)
+These close the §4.8 speed gap and are properties of the *scheduler/serving layer*, not of
+durable state; we list them so the speed result is not mistaken for a ceiling on the architecture:
+- **Adaptive admission control.** Cap dispatch near the observed session ceiling instead of
+  launching `max_workers` that mostly fast-fail; treat a burst of sub-N-second no-edit returns
+  as backpressure and throttle, eliminating wasted API calls beyond K.
+- **Throttle-vs-failure classification.** A sub-N-second `require_diff` failure should re-queue
+  as backpressure, not count against a task's quality budget (no retry storms).
+- **Dataflow scheduling.** Release a module the instant its dependencies commit, rather than at
+  full-layer barriers — the theoretical critical-path floor is 0.55 h < the monolith's 0.83 h,
+  so dataflow + a higher session allowance is the path to a *speed* win, not just parity.
+- **Non-code reasoning-artifact tasks** to test the zero-cost re-query advantage (§4.7) where the
+  discovery does not live on the filesystem.
 
 ## 7. Conclusion
 Repository-scale agent performance is primarily constrained by **state

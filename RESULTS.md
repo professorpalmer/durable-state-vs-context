@@ -88,6 +88,90 @@ Conversions are decoupled from scoring; all trees are re-scored by the current o
 - **Cursor-SDK token counts are unreliable** (implausibly low); we report wall-clock, worker
   count, and DRR instead of token deltas as the cost axis.
 
+## Concurrency ceiling (parallelism soak) — durable's speed is platform-bound, not design-bound
+
+We probed durable FULL(364) at increasing worker concurrency on the frozen engine to test the
+"just send 20× workers" intuition. Clean single-run success rates (worker produced a `.ts`):
+
+| concurrency | success rate | implied session cap K | failure mode |
+| --- | --- | --- | --- |
+| C=4 (capstone) | ~100% | — | none |
+| C=16 | 68% (40/59) | ~10.9 | fast (<20s) no-diff no-ops |
+| C=32 | 33% (49/150) | ~10.6 | fast (<20s) no-diff no-ops |
+
+Success follows `min(1, K/C)` with **K ≈ 10–11**: the Cursor API/SDK sustains ~10–11 concurrent
+agent sessions; excess workers are throttled into fast no-edit returns (median ~5–11s vs ~90–170s
+for a real conversion) that the `require_diff` gate rejects and the harness retries. This is a
+**Cursor-platform session cap, not a Puppetmaster orchestration failure** — PM spawned, leased,
+and retried all 32 correctly, and durable state + retry absorbed the throttle (the run still
+converges, just inefficiently, wasting API calls on doomed attempts).
+
+**Implication for the scaling thesis.** The dataflow headroom is real (21.6× at FULL; critical
+path = 4.6% of total work) but only ~K≈10 of it is *usable* at once on this platform. At the
+practical ceiling, durable wall ≈ work / 10.6 ≈ 1.1 h vs the monolith's 0.83 h → durable is
+~1.3× *slower* on wall-clock while being the only arm that reaches a clean strict typecheck at
+full-repo scale. So the honest claim is: **durable wins on correctness/capacity and on
+*theoretical* parallel headroom that grows with repo size; raw wall-clock parity is gated by the
+platform's concurrent-session limit, addressable below — not by durable state's design.**
+
+**Scale-emergent headroom (measured, size-sweep).** Dependency critical path as a fraction of
+total work *shrinks* with repo size — 45% (8 mod) → 31% (24) → 20% (60) → **4.6% (364)** — i.e.
+the parallelizable fraction climbs ~55% → ~95% as the DAG broadens (max layer width 5 → 78). The
+bigger the repo, the more headroom durable exposes; the binding constraint is then how much of it
+the platform lets you spend.
+
+### Puppetmaster improvement opportunities surfaced by this soak
+1. **Adaptive concurrency / admission control.** PM should cap concurrent dispatch near the
+   observed session ceiling instead of launching `max_workers` that mostly fast-fail. A
+   token-bucket limiter keyed to backpressure (a burst of <Ns no-diff returns = throttle signal)
+   would stop wasting API calls and retries beyond K.
+2. **Classify throttle vs. genuine no-op.** A sub-N-second `require_diff` failure should be tagged
+   as a *backpressure/throttle* event and re-queued without counting against the task's quality
+   budget, rather than treated identically to a real failed conversion.
+3. **Dataflow scheduling** (separate lever): release a module the instant its deps are done
+   instead of waiting on full-layer barriers. Lowers work-on-critical-path (theoretical floor
+   0.55 h < monolith 0.83 h) but does *not* raise the session cap — pairs with (1).
+
+## Third advantage axis: re-queries cost zero tokens (state-as-asset, made literal)
+
+The defining property of an *asset* (vs a *prompt*) is that reuse cost → 0. Durable state has
+this property exactly: once a discovery is **materialized as an artifact**, recalling it is a
+SQLite read — **zero LLM invocations**. Demonstrated live on the frozen engine: recalling the
+full structured result of a completed conversion job (gate verdict, changed files, strict-typecheck
+outcome, *and* the provenance that it reused `css-values.ts`) took **<0.5 s and zero LLM calls**
+(`puppetmaster artifacts <job_id>`).
+
+**Measured reuse rate (DRR) — the empirical rate of zero-marginal-cost re-queries:**
+
+| scope | DRR | modules reusing a prior materialized artifact |
+| --- | --- | --- |
+| 8 | 29–57% | 2–4 / 7 |
+| 24 | 9–27% | 2–6 / ~23 |
+| 60 | 19–28% | 10–16 / ~56 |
+| 364 (capstone) | **29%** | **86 / 293** |
+
+Each reuse is a discovery whose derivation was paid **once** and consumed free thereafter.
+
+**Cross-arm cost of a re-query (reported in LLM *invocations*, our reliable metric — sidesteps the
+unreliable Cursor-SDK token counts):**
+
+| arm | re-query of a prior discovery | why |
+| --- | --- | --- |
+| **Durable** | **0 invocations** | artifact read (SQLite SELECT) |
+| Transcript | retain in-context (ongoing per-turn cost, window-capped → fails at scale) **or** ≥1 (re-derive) | discoveries are transient text |
+| RAG | ≥1 invocation every time | re-retrieve + re-reason; nothing accumulates |
+
+This is a **third independent advantage**, alongside (a) correctness/capacity at full-repo scale
+and (b) resumability (H4) — all three flow from the same root: *discoveries are durable system
+objects, not disposable prompt text*. DB analogy: a converted `.ts` + its exported types is a
+**materialized view** over a module; consumers `SELECT` it instead of recomputing.
+
+**Honest boundary.** "Zero" is for *recall* of an already-materialized result. A re-query that
+needs genuinely new synthesis still pays the synthesis — but it starts from the materialized
+artifact (no re-derivation of the base discovery), so it is strictly cheaper than transcript
+(must re-derive) or RAG (must re-retrieve + re-reason). Storage is bytes (our `state.sqlite` is
+~1 GB), not tokens.
+
 ## Open / in progress (overnight)
 
 - **Capstone:** durable at FULL jsdom (364) — does decompose+accumulate+iterative-repair reach a
