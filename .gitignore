@@ -1,0 +1,19 @@
+# Heavy / regenerable experiment state — never tracked
+# (per-trial worktrees with node_modules + generated code, local target mirrors,
+#  Puppetmaster SQLite job state)
+runs/
+targets/
+pm-state/
+node_modules/
+.codegraph/
+
+# Large raw logs (full mocha/tsc transcripts). Curated evidence lives in results/.
+logs/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# OS
+.DS_Store

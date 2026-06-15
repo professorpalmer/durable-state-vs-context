@@ -1,0 +1,46 @@
+{
+  "name": "js_ts_strict",
+  "language": "typescript",
+  "description": "JS->TS migration oracle: strict typecheck + tests green + build, with a zero escape-hatch budget. Authoritative escape-hatch counting should use the eslint count_cmd once configured per repo; the regex patterns are the dependency-free fallback.",
+  "env": {
+    "NODE_OPTIONS": "--require tsx/cjs"
+  },
+  "_env_note": "Propagates the tsx require-hook to gate subprocesses AND to any child node processes a test spawns (e.g. jsdom's setTimeout-GC fixture runs `node fixture.js`), so a partially-migrated tree's .ts modules load at runtime instead of crashing plain node.",
+  "gates": [
+    {
+      "name": "typecheck_strict",
+      "cmd": ["npx", "--no-install", "tsc", "--strict", "--noEmit"],
+      "pass_on": "returncode_zero",
+      "timeout_seconds": 1200,
+      "required": true
+    },
+    {
+      "name": "tests",
+      "cmd": ["npm", "test", "--silent"],
+      "pass_on": "returncode_zero",
+      "timeout_seconds": 1800,
+      "required": true
+    },
+    {
+      "name": "build",
+      "cmd": ["npm", "run", "build", "--if-present"],
+      "pass_on": "returncode_zero",
+      "timeout_seconds": 1200,
+      "required": false
+    }
+  ],
+  "escape_hatches": {
+    "include_globs": ["src/**/*.ts", "src/**/*.tsx", "lib/**/*.ts", "lib/**/*.tsx"],
+    "patterns": {
+      "annotated_any": ":\\s*any(?![A-Za-z0-9_])",
+      "as_any": "\\bas\\s+any(?![A-Za-z0-9_])",
+      "generic_any": "<\\s*any\\s*>",
+      "array_any": "\\bany\\s*\\[\\]",
+      "ts_ignore": "@ts-ignore",
+      "ts_expect_error": "@ts-expect-error",
+      "ts_nocheck": "@ts-nocheck"
+    },
+    "budget": 0,
+    "note": "budget 0 = a passing run may introduce no new escape hatches. Set count_cmd to an eslint invocation that prints a single integer (e.g. matched problem count) for an authoritative, comment/string-aware count."
+  }
+}

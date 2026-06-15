@@ -1,0 +1,52 @@
+{
+  "name": "express",
+  "repo": "expressjs/express",
+  "git_url": "https://github.com/expressjs/express.git",
+  "commit": "a08da78e64a7fdc610d453fb7771754091d8ed3b",
+  "language": "typescript",
+  "role": "pilot",
+  "notes": "Small, ubiquitous CJS library. 7 source modules, 1249 passing tests. Used as the pilot + smallest size stratum; the conversion fits in any context window, so divergence here would understate the effect (a conservative floor).",
+  "source_globs": ["index.js", "lib/**/*.js"],
+  "ts_source_globs": ["index.ts", "lib/**/*.ts"],
+  "baseline_test_cmd": ["npm", "test", "--silent"],
+  "baseline_tests_passing": 1249,
+  "scaffold": {
+    "dev_dependencies": [
+      "typescript@^5.6", "tsx@^4.19", "@types/node@^22",
+      "@types/accepts@^1", "@types/body-parser@^1", "@types/content-disposition@^0.5",
+      "@types/content-type@^1", "@types/cookie@^0.6", "@types/cookie-signature@^1",
+      "@types/debug@^4", "@types/depd@^1", "@types/encodeurl@^1", "@types/escape-html@^1",
+      "@types/etag@^1", "@types/express-serve-static-core@^5", "@types/finalhandler@^1",
+      "@types/fresh@^0.5", "@types/http-errors@^2", "@types/mime-types@^3",
+      "@types/on-finished@^2", "@types/parseurl@^1", "@types/proxy-addr@^2", "@types/qs@^6",
+      "@types/range-parser@^1", "@types/send@^1", "@types/serve-static@^2",
+      "@types/statuses@^2", "@types/type-is@^1", "@types/vary@^1"
+    ],
+    "ambient_decls": {
+      "types/router.d.ts": "declare module 'router' {\n  import type { IncomingMessage, ServerResponse } from 'node:http';\n  type NextFunction = (err?: unknown) => void;\n  type RequestHandler = (req: IncomingMessage, res: ServerResponse, next: NextFunction) => void;\n  interface Route {\n    path: string;\n    stack: unknown[];\n    methods: Record<string, boolean>;\n    all(...handlers: RequestHandler[]): Route;\n    [method: string]: unknown;\n  }\n  interface RouterOptions { caseSensitive?: boolean; strict?: boolean; mergeParams?: boolean; }\n  interface Router {\n    (req: IncomingMessage, res: ServerResponse, next: NextFunction): void;\n    handle(req: IncomingMessage, res: ServerResponse, callback: NextFunction): void;\n    use(...handlers: RequestHandler[]): Router;\n    use(path: string | RegExp | Array<string | RegExp>, ...handlers: RequestHandler[]): Router;\n    route(path: string): Route;\n    param(name: string, fn: RequestHandler): void;\n    stack: unknown[];\n    Route: new (path: string) => Route;\n  }\n  interface RouterConstructor {\n    new (options?: RouterOptions): Router;\n    (options?: RouterOptions): Router;\n    Route: new (path: string) => Route;\n  }\n  const Router: RouterConstructor;\n  export = Router;\n}\n"
+    },
+    "tsconfig": {
+      "compilerOptions": {
+        "strict": true,
+        "target": "ES2020",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "noEmit": true,
+        "allowJs": false,
+        "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true
+      },
+      "include": ["index.ts", "lib/**/*.ts", "types/**/*.d.ts"]
+    },
+    "test_loader": "tsx/cjs",
+    "package_main_after": "index.ts"
+  },
+  "oracle_spec": "js_ts.json",
+  "oracle_overrides": {
+    "escape_hatches": {
+      "include_globs": ["index.ts", "lib/**/*.ts"]
+    }
+  }
+}

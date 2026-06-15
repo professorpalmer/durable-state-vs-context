@@ -1,0 +1,33 @@
+{
+  "name": "py_mypy_strict",
+  "language": "python",
+  "description": "Untyped-Python -> strict-typed oracle: mypy --strict clean + pytest green, with a zero escape-hatch budget. Replication domain to show the effect is not a tsc artifact.",
+  "gates": [
+    {
+      "name": "typecheck_strict",
+      "cmd": ["python", "-m", "mypy", "--strict", "."],
+      "pass_on": "returncode_zero",
+      "timeout_seconds": 1200,
+      "required": true
+    },
+    {
+      "name": "tests",
+      "cmd": ["python", "-m", "pytest", "-q"],
+      "pass_on": "returncode_zero",
+      "timeout_seconds": 1800,
+      "required": true
+    }
+  ],
+  "escape_hatches": {
+    "include_globs": ["src/**/*.py", "**/*.py"],
+    "patterns": {
+      "type_ignore": "#\\s*type:\\s*ignore",
+      "mypy_ignore_directive": "#\\s*mypy:\\s*ignore",
+      "explicit_Any": ":\\s*Any(?![A-Za-z0-9_])",
+      "cast_call": "\\bcast\\s*\\(",
+      "return_Any": "->\\s*Any(?![A-Za-z0-9_])"
+    },
+    "budget": 0,
+    "note": "budget 0 = no new ignores/Any/cast in a passing run. Prefer a mypy-based count_cmd (e.g. count of '# type: ignore' that mypy reports as used) for an authoritative figure."
+  }
+}

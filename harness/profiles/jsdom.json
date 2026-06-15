@@ -1,0 +1,60 @@
+{
+  "name": "jsdom",
+  "repo": "jsdom/jsdom",
+  "git_url": "https://github.com/jsdom/jsdom.git",
+  "commit": "d312832b344c8055c0d61e55bacd1a675ad5826e",
+  "language": "typescript",
+  "role": "size-sweep",
+  "notes": "Large, deeply-interconnected DOM implementation: 366 hand-written source modules (living/nodes=114). The size-sweep target \u2014 we hold the repo, model, tools, and oracle constant and vary only SCOPE SIZE (S/M/L/XL), so 'amount that must be reasoned about at once' is the single independent variable. Partial migrations require allowJs so tsc --strict checks converted .ts while tolerating the still-JS boundary (the realistic incremental-migration setup).",
+  "source_globs": ["lib/jsdom/**/*.js"],
+  "source_tracked_only": true,
+  "ts_source_globs": ["lib/jsdom/**/*.ts"],
+  "scope_anchor": "lib/jsdom/living/nodes/Node-impl.js",
+  "strata": {"S": 8, "M": 24, "L": 60, "XL": 120},
+  "baseline_test_cmd": ["npx", "mocha", "--require", "tsx/cjs", "test/api/"],
+  "scaffold": {
+    "dev_dependencies": ["typescript@^5.6", "tsx@^4.19", "@types/node@^22"],
+    "post_install_cmds": [["npm", "run", "prepare"]],
+    "patch_test_script": false,
+    "tsconfig": {
+      "compilerOptions": {
+        "strict": true,
+        "target": "ES2020",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "noEmit": true,
+        "allowJs": true,
+        "checkJs": false,
+        "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true
+      },
+      "include": ["lib/jsdom/**/*.ts"]
+    },
+    "test_loader": "tsx/cjs"
+  },
+  "oracle_spec": "js_ts.json",
+  "oracle_overrides": {
+    "description": "jsdom partial JS->TS: strict typecheck of converted .ts (allowJs boundary) + API tests green via tsx, zero escape hatches.",
+    "gates": [
+      {
+        "name": "typecheck_strict",
+        "cmd": ["npx", "--no-install", "tsc", "--strict", "--noEmit"],
+        "pass_on": "returncode_zero",
+        "timeout_seconds": 1800,
+        "required": true
+      },
+      {
+        "name": "tests_api",
+        "cmd": ["npx", "mocha", "--require", "tsx/cjs", "test/api/"],
+        "pass_on": "returncode_zero",
+        "timeout_seconds": 2400,
+        "required": true
+      }
+    ],
+    "escape_hatches": {
+      "include_globs": ["lib/jsdom/**/*.ts"]
+    }
+  }
+}
