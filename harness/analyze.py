@@ -45,13 +45,22 @@ def _dedup_canonical(recs: list[dict]) -> list[dict]:
     return list(best.values())
 
 
+# Gates confounded by jsdom's webidl codegen at XL+ scope (see RESULTS threats).
+_CONFOUNDED = {"tests_api", "conversion_complete"}
+
+
 def _cell(rec: dict) -> str:
     if rec is None:
         return "—"
     ok = "PASS" if rec["oracle_ok"] else "FAIL"
     h = rec.get("escape_hatches")
     drr = rec.get("DRR")
-    extra = "" if rec["oracle_ok"] else f" ({','.join(rec.get('failed_gates') or [])})"
+    failed = rec.get("failed_gates") or []
+    extra = "" if rec["oracle_ok"] else f" ({','.join(failed)})"
+    # Primary static axis = typecheck_strict. Mark when it passes despite a
+    # confounded runtime-gate failure (the honest XL+ jsdom situation).
+    if not rec["oracle_ok"] and "typecheck_strict" not in failed and set(failed) <= _CONFOUNDED:
+        extra += " — **typecheck CLEAN; runtime gate confounded**"
     return f"{ok} h={h} DRR={drr}{extra}"
 
 
