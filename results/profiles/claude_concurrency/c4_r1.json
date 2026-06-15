@@ -1,0 +1,40 @@
+{
+  "C": 4,
+  "rep": 1,
+  "ok": 4,
+  "fast_fail": 0,
+  "rate_limit_msgs": 0,
+  "n": 4,
+  "rate": 1.0,
+  "median_dur_s": 47.1,
+  "workers": [
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 41.7,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 46.3,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 47.1,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 124.8,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    }
+  ]
+}

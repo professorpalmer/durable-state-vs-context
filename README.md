@@ -9,6 +9,10 @@ repositories) and an unforgeable oracle.
 > that cut against the original hypothesis.** See `RESULTS.md` for the current,
 > calibrated read of the evidence.
 
+**Artifacts.** Paper: [`paper/paper.pdf`](paper/paper.pdf). Trial records + concurrency
+sweeps (Cursor + Claude second backend) as a public dataset:
+[`CaryPalmer/durable-vs-context-trials`](https://huggingface.co/datasets/CaryPalmer/durable-vs-context-trials).
+
 ## The question
 
 The field has treated agent forgetting as a *context-window* problem (bigger
@@ -34,11 +38,13 @@ The data supports the state-architecture framing, with calibrated honesty:
   (1) conflict-free parallel decomposition; (2) interruption-resumable checkpoints
   (durable preserves 70.8% + resumes→PASS vs monolith 0%); (3) **zero-marginal-cost
   re-query** — recalling a materialized discovery is a SQLite read, not an LLM call.
-- **Honest limit:** parallel *headroom* grows with repo size (critical path falls to
-  **4.6%** of total work at full scale, 21.6× theoretical), but *usable* concurrency is
-  capped at an effective **K≈10–12** sessions by the serving platform (replicated n=5–10 sweep,
-  mean ± 95% CI; success collapses monotonically above the cap) — an orchestration ceiling, not a
-  durable-state one. Closing it is future work (admission control + dataflow scheduling).
+- **Honest limit (and its resolution):** parallel *headroom* grows with repo size (critical
+  path falls to **4.6%** of total work at full scale, 21.6× theoretical), but on the Cursor
+  backend *usable* concurrency is capped at an effective **K≈10–12** sessions (replicated n=5–10
+  sweep, mean ± 95% CI; success collapses monotonically above the cap). A **second backend
+  (Claude Code) sustains 100% to C=32** under the same orchestrator — so the cap is a property of
+  the **serving platform, not durable state** (demonstrated, not just argued). Closing the Cursor
+  wall-clock gap is future work (admission control + dataflow scheduling).
 
 ## Arms (one substrate, one dimension varied: how state flows between workers)
 

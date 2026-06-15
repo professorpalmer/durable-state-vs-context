@@ -76,6 +76,19 @@ C=32 19% ±8.1** — a cleanly monotone collapse through a sharp knee, effective
 **K≈10–12** (C=12 K_eff=11.9, C=16 K_eff=10.5). Above the cap the rate falls below a `min(1,K/C)`
 reference (retry churn inflates the denominator).
 
+## `claude_concurrency_aggregate.json` + `claude_concurrency_profiles/`
+
+The **second-backend control** that proves the cap above is platform-specific, not fundamental.
+The *same* frozen orchestrator runs **Claude Code (Anthropic API)** workers instead of Cursor
+agents; a probe launches exactly C workers simultaneously (each isolated on its own tree + PM
+state-dir, success = produced the `.ts`), C ∈ {4,8,16,24,32}, n=3. The aggregate JSON has per-C
+mean ± 95% CI; `claude_concurrency_profiles/c{C}_r{rep}.json` has every worker's `got_ts`,
+duration, and rate-limit signal.
+
+Result: **100% success at every C through C=32** (252 workers, 0 fast-fails) — where the Cursor
+backend collapses to 66%/28%/19% at C=16/24/32. Same orchestrator + durable state, different
+serving platform → the admission cap is a property of the platform, not of durable state.
+
 ## Headline result
 
 A single modern agentic worker scales much further than the naive context thesis predicts

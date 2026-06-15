@@ -1,0 +1,26 @@
+{
+  "C": 2,
+  "rep": 1,
+  "ok": 2,
+  "fast_fail": 0,
+  "rate_limit_msgs": 0,
+  "n": 2,
+  "rate": 1.0,
+  "median_dur_s": 115.4,
+  "workers": [
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 56.4,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 115.4,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    }
+  ]
+}

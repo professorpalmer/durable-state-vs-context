@@ -120,9 +120,28 @@ concurrent agent sessions; excess workers are throttled into fast no-edit return
 
 This is a **Cursor-platform session cap, not a Puppetmaster orchestration failure** — PM spawned,
 leased, and retried every worker correctly, and durable state + retry absorbed the throttle (the
-run still converges, just inefficiently, wasting API calls on doomed attempts). Confirming the cap
-is platform-specific (not fundamental) needs a second, independent serving backend — the key
-remaining validation.
+run still converges, just inefficiently, wasting API calls on doomed attempts).
+
+### Second backend confirms the cap is platform-specific (not fundamental)
+
+We reproduced the concurrency probe on a **second serving backend — Claude Code (Anthropic API) —
+under the same frozen orchestrator** (`harness/claude_concurrency_probe.py`: launch exactly C
+workers simultaneously, each isolated on its own tree and PM state-dir, success = produced the
+`.ts`). The cap **vanishes**:
+
+| concurrency | Cursor (success ± 95% CI) | Claude Code (success ± 95% CI) |
+| --- | --- | --- |
+| C=4  | — | 100% ± 0.0% (n=3) |
+| C=8  | 97% ± 5.7% | **100% ± 0.0%** (n=3) |
+| C=16 | 66% ± 2.7% | **100% ± 0.0%** (n=3) |
+| C=24 | 28% ± 4.3% | **100% ± 0.0%** (n=3) |
+| C=32 | 19% ± 8.1% | **100% ± 0.0%** (n=3) |
+
+252 Claude workers, **0 fast-fails**, 2 transient rate-limit messages that still completed after
+backoff. Where Cursor collapses (C=16→66%, C=24→28%, C=32→19%), Claude sustains **100% to C=32**
+(Fig. `concurrency_backends`). Same orchestrator, same durable state, different backend → the
+admission cap is a property of the **serving platform**, not of durable state or Puppetmaster.
+This moves the platform-specificity claim from *argued* to *demonstrated*.
 
 **Implication for the scaling thesis.** The dataflow headroom is real (21.6× at FULL; critical
 path = 4.6% of total work) but only ~K≈10 of it is *usable* at once on this platform. At the

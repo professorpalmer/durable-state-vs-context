@@ -37,8 +37,9 @@ ROOT = HERE.parent
 MIRROR = str(ROOT / "targets" / "jsdom")
 PROFILE_SPEC = str(HERE / "profiles" / "jsdom.json")
 RUN_ARM = str(HERE / "run_arm.py")
-SWEEP_DIR = ROOT / "results" / "profiles" / "sweep"
+SWEEP_DIR = ROOT / "results" / "profiles" / ("sweep" if os.environ.get("SWEEP_BACKEND", "cursor") == "cursor" else "sweep_claude")
 
+BACKEND = os.environ.get("SWEEP_BACKEND", "cursor")  # "cursor" or "claude" worker platform
 WINDOW = int(os.environ.get("SWEEP_WINDOW", "240"))  # steady-state window (s), uniform across all C
 WALL_BUDGET = 150     # extra wall seconds beyond WINDOW to absorb base-build + startup
                       # (raised from 90: a slow cold base build was truncating the window)
@@ -116,7 +117,7 @@ def run_once(c: int, rep: int, window: int) -> dict:
     env["PYTHONPATH"] = str(ROOT / ".pm-engine")
     cmd = ["python", "-u", RUN_ARM, "--mirror", MIRROR, "--profile", PROFILE_SPEC,
            "--arm", "durable", "--size", "364", "--stratum", "FULL", "--seed", "0",
-           "--max-workers", str(c), "--state-dir", state_dir,
+           "--backend", BACKEND, "--max-workers", str(c), "--state-dir", state_dir,
            "--runs-root", runs_root, "--out", out, "--timeout", "300"]
     print(f"\n=== C={c} rep={rep} :: launching ===", flush=True)
     proc = subprocess.Popen(cmd, cwd=str(ROOT), env=env, start_new_session=True,

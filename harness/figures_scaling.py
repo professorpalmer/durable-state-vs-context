@@ -75,6 +75,44 @@ def fig_ceiling() -> None:
     print("wrote", p)
 
 
+def fig_backends() -> None:
+    """The money figure: same orchestrator + durable state, two serving backends.
+    Cursor collapses above its session cap; Claude Code sustains 100% to C=32 — so the
+    cap is a property of the serving platform, not of durable state."""
+    cur = json.loads((ROOT / "results" / "sweep_aggregate.json").read_text())["aggregate"]
+    cla = json.loads((ROOT / "results" / "claude_concurrency_aggregate.json").read_text())["aggregate"]
+    cc = sorted(int(c) for c in cur)
+    cm = [cur[str(c)]["mean"] for c in cc]
+    ce = [cur[str(c)]["ci95"] for c in cc]
+    lc = sorted(int(c) for c in cla)
+    lm = [cla[str(c)]["mean"] for c in lc]
+    le = [cla[str(c)]["ci95"] for c in lc]
+
+    fig, ax = plt.subplots(figsize=(6.8, 4.4))
+    ax.errorbar(lc, lm, yerr=le, fmt="s-", color="#27ae60", ms=7, lw=2, capsize=4,
+                label="Claude Code (Anthropic API)")
+    ax.errorbar(cc, cm, yerr=ce, fmt="o-", color="#c0392b", ms=7, lw=2, capsize=4,
+                label="Cursor agent (Cursor API/SDK)")
+    ax.axhspan(0, 0.0, color="none")
+    ax.annotate("100% through C=32\n(no cap observed)", (24, 1.0),
+                textcoords="offset points", xytext=(-4, -34), fontsize=8.5, color="#1e8449")
+    ax.annotate("collapses above\nK≈10–12 sessions", (24, 0.28),
+                textcoords="offset points", xytext=(6, 6), fontsize=8.5, color="#922b21")
+    ax.set_xlabel("requested worker concurrency  (C)")
+    ax.set_ylabel("worker success rate")
+    ax.set_title("Same orchestrator + durable state, two backends:\n"
+                 "the concurrency cap is platform-specific, not fundamental")
+    ax.set_ylim(0, 1.08)
+    ax.set_xlim(0, 36)
+    ax.grid(alpha=0.3)
+    ax.legend(loc="center left", fontsize=9)
+    fig.tight_layout()
+    p = FIGS / "concurrency_backends.png"
+    fig.savefig(p, dpi=140)
+    plt.close(fig)
+    print("wrote", p)
+
+
 def fig_headroom() -> None:
     # from scaling_headroom.py over the durable size-sweep (cleanest seed per size)
     # (scope, critical-path % of total work, dataflow headroom x)
@@ -119,4 +157,5 @@ def fig_headroom() -> None:
 if __name__ == "__main__":
     FIGS.mkdir(exist_ok=True)
     fig_ceiling()
+    fig_backends()
     fig_headroom()

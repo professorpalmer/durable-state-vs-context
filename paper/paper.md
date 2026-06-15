@@ -30,11 +30,13 @@ re-query** of any materialized discovery (a SQLite read, not an LLM call). A fai
 taxonomy shows three architectures fail in three distinct ways — RAG by *conflict*,
 monolith by *capacity*, durable by neither. We also measure the limit of the
 parallelism this enables: the dependency critical path falls to **4.6% of total
-work** at full scale (so headroom *grows* with repo size), but *usable* concurrency
-is capped at an effective **K≈10–12** simultaneous agent sessions by the serving
-platform (a replicated n=5–10 sweep with 95% CIs; success collapses monotonically
-above the cap), not by durable state — an orchestration constraint we localize and
-leave as future work.
+work** at full scale (so headroom *grows* with repo size), but on the Cursor backend
+*usable* concurrency is capped at an effective **K≈10–12** simultaneous agent sessions
+by the serving platform (a replicated n=5–10 sweep with 95% CIs; success collapses
+monotonically above the cap). A second backend (Claude Code) sustains **100% to C=32**
+under the same orchestrator, confirming the cap is a property of the serving platform,
+not of durable state — an orchestration constraint we localize rather than a limit of
+the architecture.
 The contribution is a reframing — *state is an asset, not a prompt* — with controls
 that isolate which capability actually matters.
 
@@ -342,7 +344,13 @@ throttled sessions inflates the denominator, so the collapsed regime is *steeper
 uniform-window protocol showed it was a measurement artifact of mixed stop-rules, not a property
 of the system.) We attribute the cap to the **Cursor API/SDK, not the orchestrator**: Puppetmaster
 spawned, leased, and retried every worker correctly, and durable state + retry *absorbed* the
-throttle (the run still converges). The consequence: at the practical ceiling, durable wall ≈
+throttle (the run still converges). **We confirm this with a second serving backend**
+(Fig. `concurrency_backends`): running the *same* orchestrator with Claude Code workers
+(Anthropic API) in place of Cursor agents, a concurrency probe that launches exactly C workers
+simultaneously sustains **100% success at every C ∈ {4,8,16,24,32}** (n=3 each; 252 workers; 0
+fast-fails) — including at C=16/24/32, where the Cursor backend collapses to 66%/28%/19%. The
+concurrency cap is therefore a property of the **serving platform**, not of durable state or the
+orchestrator: swap the backend and it vanishes within the tested range. The consequence: at the practical ceiling, durable wall ≈
 work/~11 ≈ 1.1 h vs the monolith's 0.83 h — durable is ~1.3× *slower* on wall-clock while being
 the only arm that reaches a clean strict typecheck at full scale. The 21.6× theoretical headroom
 is real but only ~K of it is spendable at once today; closing that gap is an *orchestration*
@@ -362,9 +370,12 @@ problem (§6 future work), not a property of durable state.
   realized when one context is insufficient, or work must survive interruption,
   parallelize, or be revisited cheaply — not a universal "context is solved" claim.
 - **The speed gap is an orchestration ceiling, not a state-architecture one.** Durable's
-  ~1.3× wall-clock penalty at full scale (§4.8) is set by a platform session cap (K≈10–12),
-  not by accumulation; the theoretical 21.6× headroom says the *architecture* scales, and
-  realizing it is an engineering problem on the serving/scheduling side (§6).
+  ~1.3× wall-clock penalty at full scale (§4.8) is set by a *platform* session cap (K≈10–12
+  on Cursor), not by accumulation. We demonstrate this directly: the same orchestrator and
+  durable state on a **second backend (Claude Code) sustains 100% to C=32** where Cursor
+  collapses (Fig. `concurrency_backends`). The theoretical 21.6× headroom says the
+  *architecture* scales; realizing it is an engineering problem on the serving/scheduling
+  side (§6), and the backend choice alone moves the ceiling.
 
 ## 6. Threats to validity
 - **jsdom build-system coupling (scope-correlated).** jsdom's `npm run prepare`
@@ -388,16 +399,17 @@ problem (§6 future work), not a property of durable state.
 - Cursor-SDK token counts are unreliable (implausibly low); we report wall-clock,
   worker count, and DRR as the cost axes instead of token deltas.
 - Single platform (Puppetmaster cursor workers); model routing held constant.
-- **Platform concurrency ceiling (§4.8).** Usable parallelism is capped at an effective
-  K≈10–12 concurrent agent sessions by the serving API, so the measured wall-clock does not
-  yet realize the 21.6× dataflow headroom. This bounds the *speed* comparison (durable ~1.3×
-  the monolith at full scale) but not the *correctness*, *resumability*, or *re-query*
-  results, none of which depend on concurrency. We ran a **replicated** sweep at
-  C∈{8,12,16,24,32} (n=5–10 per point, uniform 240 s window, every run contamination-checked
-  and quality-gated for a complete window) and report mean ± 95% CI; the collapse is
-  monotone and tightly resolved. A second, independent serving backend — to confirm the cap
-  is platform-specific rather than fundamental — remains the key open validation (it needs a
-  non-Cursor agent backend; left as future work).
+- **Platform concurrency ceiling (§4.8).** On the Cursor backend, usable parallelism is
+  capped at an effective K≈10–12 concurrent agent sessions by the serving API, so the
+  measured Cursor wall-clock does not yet realize the 21.6× dataflow headroom. This bounds the
+  *speed* comparison (Cursor durable ~1.3× the monolith at full scale) but not the
+  *correctness*, *resumability*, or *re-query* results, none of which depend on concurrency.
+  We ran a **replicated** sweep at C∈{8,12,16,24,32} (n=5–10 per point, uniform 240 s window,
+  every run contamination-checked and quality-gated for a complete window), mean ± 95% CI; the
+  collapse is monotone and tightly resolved. Crucially, a **second backend (Claude Code /
+  Anthropic) under the same orchestrator sustains 100% to C=32** (Fig. `concurrency_backends`),
+  so the cap is platform-specific, not fundamental — it is an orchestration/serving constraint,
+  not a property of durable state.
 
 ## 6.1 Future work (orchestration track — distinct from the state-architecture claim)
 These close the §4.8 speed gap and are properties of the *scheduler/serving layer*, not of

@@ -1,0 +1,124 @@
+{
+  "C": 16,
+  "rep": 3,
+  "ok": 16,
+  "fast_fail": 0,
+  "rate_limit_msgs": 0,
+  "n": 16,
+  "rate": 1.0,
+  "median_dur_s": 70.0,
+  "workers": [
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 34.8,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 41.6,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 45.0,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 49.3,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 50.0,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 57.2,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 58.2,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 62.6,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 70.0,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 71.1,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 72.0,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 74.3,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 83.8,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 84.3,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 114.2,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 129.4,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    }
+  ]
+}

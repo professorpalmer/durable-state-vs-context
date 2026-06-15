@@ -34,3 +34,8 @@ results/sweep_*_trial.jsonl
 results/profiles/*.log
 results/profiles/ceiling_L_c16.jsonl
 results/profiles/probe_c16.jsonl
+
+# Second-backend probe: clean aggregate + per-wave profiles ARE tracked as evidence;
+# the intermediate running log and the slow full-jsdom integration run are not.
+results/claude_probe_runs.json
+results/profiles/sweep_claude/

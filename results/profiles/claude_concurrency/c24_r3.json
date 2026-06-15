@@ -1,0 +1,180 @@
+{
+  "C": 24,
+  "rep": 3,
+  "ok": 24,
+  "fast_fail": 0,
+  "rate_limit_msgs": 0,
+  "n": 24,
+  "rate": 1.0,
+  "median_dur_s": 56.9,
+  "workers": [
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 38.6,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 41.3,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 42.3,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 46.1,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 49.1,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 49.4,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 51.6,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 51.8,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 54.8,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 55.4,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 55.6,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 56.5,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 56.9,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 66.0,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 66.3,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 66.7,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 66.7,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 68.1,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 70.5,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 73.6,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 73.8,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 75.3,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 76.9,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    },
+    {
+      "got_ts": true,
+      "rc": 0,
+      "dur_s": 80.8,
+      "fast_fail": false,
+      "rate_limit_msg": false
+    }
+  ]
+}

@@ -154,9 +154,20 @@ def _prompt_monolith(scope: list[str]) -> str:
     )
 
 
+# Worker serving backend: "cursor" (default, Cursor agent) or "claude" (Claude Code
+# via Anthropic API). Set once in main() from --backend so every arm dispatches
+# through the same platform. Used to test whether the concurrency cap is platform-
+# specific (Cursor session cap) rather than a property of durable state.
+BACKEND = "cursor"
+
+
 def _run_worker(prompt: str, wk: Path, state_dir: Path, model: Optional[str], timeout: int) -> dict:
-    cmd = ["python", "-m", "puppetmaster", "--state-dir", str(state_dir), "cursor", prompt,
-           "--cwd", str(wk), "--implement", "--timeout-seconds", str(timeout)]
+    if BACKEND == "claude":
+        cmd = ["python", "-m", "puppetmaster", "--state-dir", str(state_dir), "claude", prompt,
+               "--cwd", str(wk), "--timeout-seconds", str(timeout)]
+    else:
+        cmd = ["python", "-m", "puppetmaster", "--state-dir", str(state_dir), "cursor", prompt,
+               "--cwd", str(wk), "--implement", "--timeout-seconds", str(timeout)]
     if model:
         cmd += ["--model", model]
     started = time.time()
@@ -317,12 +328,17 @@ def main(argv: Optional[list[str]] = None) -> int:
     ap.add_argument("--stratum", required=True)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--model", default=None)
+    ap.add_argument("--backend", default="cursor", choices=["cursor", "claude"],
+                    help="worker serving platform (cursor agent or Claude Code)")
     ap.add_argument("--timeout", type=int, default=900, help="per-worker timeout seconds")
     ap.add_argument("--max-workers", type=int, default=6)
     ap.add_argument("--state-dir", default="/Users/cary/lwds/pm-state")
     ap.add_argument("--runs-root", default="/Users/cary/lwds/runs")
     ap.add_argument("--out", default="/Users/cary/lwds/results/trials.jsonl")
     args = ap.parse_args(argv)
+
+    global BACKEND
+    BACKEND = args.backend
 
     mirror = Path(args.mirror).resolve()
     profile = json.loads(Path(args.profile).read_text())
