@@ -6,3 +6,17 @@
 \newunicodechar{×}{\ensuremath{\times}}
 \newunicodechar{¹}{\textsuperscript{1}}
 \newunicodechar{…}{\ldots}
+
+% --- Table readability ---------------------------------------------------
+% Several tables have tall, multi-line cells (the hypothesis scorecard, the
+% failure taxonomy, the re-query table). Booktabs alone gives no row
+% separators, so adjacent rows blur together. Apply subtle alternating row
+% shading + a little extra row height so each row is easy to delimit.
+% (The `table` option for xcolor is injected by build.sh before pandoc's own
+% \usepackage{xcolor}, which is what makes \rowcolors available here.)
+\usepackage{etoolbox}
+\definecolor{rowshade}{gray}{0.92}
+\AtBeginEnvironment{longtable}{%
+  \rowcolors{2}{rowshade}{white}%
+  \renewcommand{\arraystretch}{1.18}%
+}
