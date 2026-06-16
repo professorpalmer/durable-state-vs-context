@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it using the metadata below."
+title: "State, Not Tokens: Repository-Scale Agent Reasoning Is Bound by State Architecture"
+authors:
+  - family-names: Palmer
+    given-names: Cary
+    affiliation: "Independent Researcher"
+type: software
+license: CC-BY-4.0
+repository-code: "https://github.com/professorpalmer/durable-state-vs-context"
+url: "https://professorpalmer.github.io/durable-state-vs-context/"
+doi: "10.5281/zenodo.20709566"
+version: "1.1"
+date-released: "2026-06-16"
+keywords:
+  - coding agents
+  - durable state
+  - long-context reasoning
+  - repository-scale reasoning
+  - agent orchestration
+  - NL2Repo-Bench
+preferred-citation:
+  type: article
+  title: "State, Not Tokens: Repository-Scale Agent Reasoning Is Bound by State Architecture"
+  authors:
+    - family-names: Palmer
+      given-names: Cary
+      affiliation: "Independent Researcher"
+  year: 2026
+  doi: "10.5281/zenodo.20709566"
+  url: "https://doi.org/10.5281/zenodo.20709566"

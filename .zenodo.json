@@ -1,0 +1,36 @@
+{
+  "title": "State, Not Tokens: Repository-Scale Agent Reasoning Is Bound by State Architecture",
+  "description": "<p>A controlled study showing repository-scale agent reasoning is bound by <em>state architecture</em>, not nominal context length. Under an unforgeable JavaScript&rarr;TypeScript migration oracle (strict <code>tsc</code>, immutable tests, zero escape hatches), three arms hold model, tools, scaffold, and oracle constant and vary only how state flows between bounded workers: a single-context monolith, a durable arm that accumulates each completed dependency layer as a committed artifact on a shared tree, and a stateless-RAG arm whose per-file workers retrieve context but never see each other's results. The paper also reports external validation on the third-party NL2Repo-Bench benchmark (91.1% mean test-pass rate, about 2.28x the published ~40% state of the art). Repository includes the paper, the harness, and the canonical trial data.</p>",
+  "upload_type": "publication",
+  "publication_type": "preprint",
+  "access_right": "open",
+  "license": "cc-by-4.0",
+  "creators": [
+    {
+      "name": "Palmer, Cary",
+      "affiliation": "Independent Researcher"
+    }
+  ],
+  "keywords": [
+    "coding agents",
+    "durable state",
+    "long-context reasoning",
+    "repository-scale reasoning",
+    "retrieval-augmented generation",
+    "agent orchestration",
+    "TypeScript migration",
+    "NL2Repo-Bench"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/professorpalmer/durable-state-vs-context",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    },
+    {
+      "identifier": "https://professorpalmer.github.io/durable-state-vs-context/",
+      "relation": "isDocumentedBy",
+      "scheme": "url"
+    }
+  ]
+}
