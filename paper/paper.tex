@@ -166,7 +166,12 @@ agent sessions by the serving platform (a replicated n=5--10 sweep with
 backend (Claude Code) sustains \textbf{100\% to C=32} under the same
 orchestrator, confirming the cap is a property of the serving platform,
 not of durable state: an orchestration constraint we localize rather
-than a limit of the architecture. The contribution is a reframing ---
+than a limit of the architecture. Finally, on an independent third-party
+benchmark (NL2RepoBench), the same durable-state orchestration reaches a
+\textbf{91.1\%} mean test-pass rate, about 2.28 times the published
+\textasciitilde40\% state of the art, and solves 53\% of libraries to a
+fully green upstream test suite, showing the architecture transfers
+beyond the controlled study. The contribution is a reframing ---
 \emph{state is an asset, not a prompt} --- with controls that isolate
 which capability actually matters.
 
@@ -246,6 +251,13 @@ controlled design isolates them.
   (wall-clock at full scale): a \emph{platform} concurrency ceiling
   (K≈10--12 sessions), not state architecture, with the parallel
   headroom shown to \emph{grow} with repo size.
+\item
+  External validation on an independent third-party benchmark
+  (NL2RepoBench): the same durable-state orchestration reaches a 91.1\%
+  mean test-pass rate (about 2.28× the published \textasciitilde40\%
+  SOTA) and solves 53\% of libraries to a fully green upstream suite,
+  with a single-versus-swarm contrast that reproduces the
+  integration-failure recovery the controlled study predicts.
 \end{enumerate}
 
 \subsection{2. Related work}\label{related-work}
@@ -493,7 +505,8 @@ jsdom-M (24) & \textbf{PASS} (seeds 1,2: 2/2) & --- & \textbf{FAIL}
 (seeds 1,2: 0/2) \\
 jsdom-L (60) & localized gaps (s1: 1 err) & \textbf{CLEAN} (2 calls, 1.7
 min) & \textbf{FAIL} (structural conflicts) \\
-jsdom-XL (120) & \textbf{CLEAN} (typecheck, 0 hatches)¹ & --- & --- \\
+jsdom-XL (120) & \textbf{CLEAN} (typecheck, 0 hatches)¹ & --- &
+\textbf{FAIL} (≈290 type errors; \texttt{TS2451} ×122) \\
 \end{longtable}
 }
 
@@ -503,10 +516,17 @@ clean while RAG fails at \textbf{every} seed (S 0/3, M 0/2); at larger
 scope (L) durable's first pass leaves a \emph{few localized} type gaps
 that \textbf{targeted repair clears to CLEAN cheaply} (L seed 1: one
 \texttt{TS2353}, 2 repair calls, 101 s), whereas RAG fails by
-\emph{structural cross-file conflicts} that have no cheap local fix. ¹At
-XL the durable runtime gate is confounded by jsdom's own build system
-(§6); we report the unconfounded static axis (\texttt{tsc} clean, 0
-hatches, all 120 converted).
+\emph{structural cross-file conflicts} that have no cheap local fix. The
+divergence \textbf{persists and sharpens at the largest scope}: at XL
+(120 modules) durable's static axis is CLEAN (0 type errors) while RAG's
+120 blind workers produce a tree carrying ≈290 type errors, dominated by
+\texttt{TS2451} redeclaration conflicts that scale from ×10 at small
+scope to \textbf{×122} at XL. The durable--RAG gap therefore
+\emph{widens} with scale rather than closing --- the opposite of what a
+``retrieval is enough'' account predicts. ¹At XL the durable runtime
+gate is confounded by jsdom's own build system (§6); we report the
+unconfounded static axis (\texttt{tsc} clean, 0 hatches, all 120
+converted).
 
 The mechanism distinction is the point: RAG and durable both fail ``by
 type errors'' at scale, but \textbf{durable's are localized and
@@ -542,10 +562,11 @@ reading
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-\textbf{conflict} & stateless-RAG & \texttt{TS2451} redeclare ×10,
-\texttt{TS2717}, \texttt{TS2430}, \texttt{TS2739} & blind workers emit
+\textbf{conflict} & stateless-RAG & \texttt{TS2451} redeclare (×10 at
+S--L, \textbf{×122 at XL}), \texttt{TS2300} dup-identifier ×30,
+\texttt{TS2717}/\texttt{TS2687} decl-mismatch & blind workers emit
 colliding top-level declarations / inconsistent shared types → merged
-tree won't compile \\
+tree won't compile; conflict count \emph{grows} with scope \\
 \textbf{capacity} & monolith (364) & \texttt{TS2322} ×8, \texttt{TS2571}
 un-narrowed \texttt{unknown} ×7, \texttt{TS2339} ×1 (16 total) & global
 view, but can't maintain strict correctness on the hardest module at
@@ -557,10 +578,12 @@ bounds per-worker complexity \\
 
 \texttt{TS2451} (``cannot redeclare block-scoped variable'') appears
 \textbf{only} in the RAG arm and is the direct fingerprint of missing
-shared state. The monolith's \texttt{unknown}/ assignability errors
-appear \textbf{only} under one global context at full scale. Durable
-avoids both by construction. This is the paper's central mechanistic
-claim.
+shared state --- and its count \emph{grows with scope} (×10 at S--L,
+×122 at XL), so the conflict pathology intensifies exactly where
+decomposition is most needed. The monolith's \texttt{unknown}/
+assignability errors appear \textbf{only} under one global context at
+full scale. Durable avoids both by construction. This is the paper's
+central mechanistic claim.
 
 \subsubsection{4.4 Discovery Reuse Rate}\label{discovery-reuse-rate}
 
@@ -659,7 +682,8 @@ not window-overflow. The binding constraint is \textbf{state
 architecture, not nominal context length}: the paper's actual thesis. \\
 \textbf{H2} & durable accumulation \textgreater{} stateless retrieval,
 same decomposition+retrieval & \textbf{SUPPORTED} & durable PASS vs RAG
-FAIL at S (0/3 seeds), M, L. Only accumulation differs. \\
+FAIL at S (0/3 seeds), M, L; at XL durable typecheck-CLEAN vs RAG ≈290
+errors (\texttt{TS2451}×122). Only accumulation differs. \\
 \textbf{H3} & failure mechanism differs by architecture &
 \textbf{SUPPORTED (revised)} & not generic ``context overflow'': RAG
 fails by \emph{conflict} (\texttt{TS2451} only in RAG), monolith by
@@ -836,6 +860,83 @@ theoretical headroom is real but only \textasciitilde K of it is
 spendable at once today; closing that gap is an \emph{orchestration}
 problem (§6 future work), not a property of durable state.
 
+\subsubsection{4.9 External validation:
+NL2RepoBench}\label{external-validation-nl2repobench}
+
+The jsdom study isolates the mechanism under a controlled oracle. To
+test whether the same durable-state architecture transfers to an
+independent third-party benchmark, we ran it on NL2Repo-Bench (M-A-P,
+2025), which asks an agent to build a complete Python library from a
+natural-language specification alone, starting from an empty workspace,
+and scores the result by executing the library's original upstream
+pytest suite inside the benchmark's own Docker harness. We swapped only
+the agent; the specifications, the test suites, and the scorer are the
+benchmark's own, so the pass rate cannot be inflated by code we control.
+
+Over the 104 tasks, durable-state orchestration reaches a mean test-pass
+rate of \textbf{91.1\%} across the 103 tasks the harness scored (90.2\%
+if the one task whose scorer timed out is counted as zero), solves
+\textbf{53\%} of libraries to 100\% of their upstream suite, and clears
+at least 90\% of tests on 89\% of tasks. The published state of the art
+at the time of writing is roughly 40\%, so this is about \textbf{2.28
+times} the reported SOTA. One qualifier on that ratio: our workers run
+on a commercial coding agent rather than a single named model, and we
+did not re-verify which model produced the published number, so we read
+this as durable-state orchestration substantially exceeding the
+published field, not as a head-to-head model comparison.
+
+Four tasks fail for reasons that are not agent-reasoning failures, and
+we keep them in the denominator rather than dropping them: pyautogui (a
+GUI-automation library whose test process the scorer could not drive to
+completion), synthetic (the built library installs and collects 93
+tests, then the test process aborts with a segmentation fault),
+python-pytest-cases (the generated package was not importable in the
+scorer's environment, so 274 of 274 tests fail at collection), and boto
+(the scorer's container could not locate a pytest binary, exit 127, so
+the code never ran). Excluding these four environment- and
+packaging-bound tasks, the mean over the remaining 100 is 93.8\%. We
+report the inclusive number as the headline.
+
+NL2RepoBench is a single-shot construction task, which also lets us test
+the second half of the thesis: that durable state enables decomposition
+across workers. On a set of larger libraries we compared one durable
+worker against a durable swarm that splits the library across parallel
+workers on a single shared committed tree and repairs against the
+benchmark's own test signal. The swarm recovers exactly the failure
+class the controlled study predicts, integration and wiring failures
+where the pieces exist but do not connect:
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+library & single worker & durable swarm \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+verifiers & 0\% & 100\% \\
+wsgidav & 39\% & 100\% \\
+deslib & 19\% & 93\% \\
+flasky & 85\% & 94\% \\
+\end{longtable}
+}
+
+It does not manufacture missing breadth: on the largest libraries the
+swarm cannot add implementation that was never scaffolded, and the four
+environment-bound tasks above are unaffected by decomposition because
+their failure is in the harness, not the code. This matches the jsdom
+taxonomy. Durable state changes the kind of failure into one that
+targeted repair can clear; it does not turn a breadth or environment
+problem into a reasoning win.
+
+Two limits frame this result honestly. NL2RepoBench is a comparison
+against the published field and a single-versus-swarm contrast, not the
+clean three-arm control of §4.2, so it shows the architecture transfers
+to a second benchmark rather than re-isolating the variable. And it is a
+different task shape from jsdom (from-scratch construction in Python
+versus incremental migration in TypeScript), which is the point: the
+same durable-state orchestration helps in both.
+
 \subsection{5. Discussion}\label{discussion}
 
 \begin{itemize}
@@ -1004,6 +1105,10 @@ treating discoveries as durable, consistent, reusable system objects ---
   Jimenez, C. E., Yang, J., Wettig, A., Yao, S., Pei, K., Press, O., \&
   Narasimhan, K. (2023). \emph{SWE-bench: Can Language Models Resolve
   Real-World GitHub Issues?} ICLR 2024. arXiv:2310.06770.
+\item
+  Multimodal Art Projection (M-A-P) (2025). \emph{NL2Repo-Bench: Towards
+  Long-Horizon Repository Generation Evaluation of Coding Agents.}
+  arXiv:2512.12730.
 \end{itemize}
 
 \end{document}

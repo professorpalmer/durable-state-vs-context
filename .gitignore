@@ -43,3 +43,7 @@ results/profiles/sweep_claude/
 # arXiv submission build (reproducible via paper/make_arxiv.sh)
 paper/arxiv/
 paper/arxiv-submission.tar.gz
+
+# local audit renders + run logs (regenerable)
+paper/_audit/
+xl_rag.log
