@@ -9,7 +9,7 @@ type: software
 license: CC-BY-4.0
 repository-code: "https://github.com/professorpalmer/durable-state-vs-context"
 url: "https://professorpalmer.github.io/durable-state-vs-context/"
-doi: "10.5281/zenodo.20709566"
+doi: "10.5281/zenodo.20709565"
 version: "1.1"
 date-released: "2026-06-16"
 keywords:
@@ -27,5 +27,5 @@ preferred-citation:
       given-names: Cary
       affiliation: "Independent Researcher"
   year: 2026
-  doi: "10.5281/zenodo.20709566"
-  url: "https://doi.org/10.5281/zenodo.20709566"
+  doi: "10.5281/zenodo.20709565"
+  url: "https://doi.org/10.5281/zenodo.20709565"

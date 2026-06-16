@@ -1,6 +1,6 @@
 # Durable State vs. Context Length for Repository-Scale Agent Reasoning
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20709566.svg)](https://doi.org/10.5281/zenodo.20709566)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20709565.svg)](https://doi.org/10.5281/zenodo.20709565)
 [![License: MIT](https://img.shields.io/badge/code-MIT-blue.svg)](LICENSE)
 [![Paper: CC BY 4.0](https://img.shields.io/badge/paper%20%26%20data-CC%20BY%204.0-lightgrey.svg)](LICENSE)
 
@@ -14,7 +14,7 @@ repositories) and an unforgeable oracle.
 > calibrated read of the evidence.
 
 **Artifacts.** Paper: [`paper/paper.pdf`](paper/paper.pdf). Archived release with a
-citable DOI: [10.5281/zenodo.20709566](https://doi.org/10.5281/zenodo.20709566).
+citable DOI: [10.5281/zenodo.20709565](https://doi.org/10.5281/zenodo.20709565).
 Trial records + concurrency sweeps (Cursor + Claude second backend) as a public dataset:
 [`CaryPalmer/durable-vs-context-trials`](https://huggingface.co/datasets/CaryPalmer/durable-vs-context-trials).
 
@@ -112,8 +112,8 @@ If you use this work, please cite the archived release:
                Reasoning Is Bound by State Architecture}},
   year      = {2026},
   publisher = {Zenodo},
-  doi       = {10.5281/zenodo.20709566},
-  url       = {https://doi.org/10.5281/zenodo.20709566}
+  doi       = {10.5281/zenodo.20709565},
+  url       = {https://doi.org/10.5281/zenodo.20709565}
 }
 ```
 
