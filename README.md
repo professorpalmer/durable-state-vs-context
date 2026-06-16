@@ -1,5 +1,9 @@
 # Durable State vs. Context Length for Repository-Scale Agent Reasoning
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20709566.svg)](https://doi.org/10.5281/zenodo.20709566)
+[![License: MIT](https://img.shields.io/badge/code-MIT-blue.svg)](LICENSE)
+[![Paper: CC BY 4.0](https://img.shields.io/badge/paper%20%26%20data-CC%20BY%204.0-lightgrey.svg)](LICENSE)
+
 A controlled study of whether repository-scale agent performance is limited by
 **state architecture** or by **nominal context length** — using a hard,
 machine-checkable task (strict JavaScript→TypeScript migration of real OSS
@@ -9,8 +13,9 @@ repositories) and an unforgeable oracle.
 > that cut against the original hypothesis.** See `RESULTS.md` for the current,
 > calibrated read of the evidence.
 
-**Artifacts.** Paper: [`paper/paper.pdf`](paper/paper.pdf). Trial records + concurrency
-sweeps (Cursor + Claude second backend) as a public dataset:
+**Artifacts.** Paper: [`paper/paper.pdf`](paper/paper.pdf). Archived release with a
+citable DOI: [10.5281/zenodo.20709566](https://doi.org/10.5281/zenodo.20709566).
+Trial records + concurrency sweeps (Cursor + Claude second backend) as a public dataset:
 [`CaryPalmer/durable-vs-context-trials`](https://huggingface.co/datasets/CaryPalmer/durable-vs-context-trials).
 
 ## The question
@@ -95,6 +100,22 @@ Targets are pinned to exact commits (`*.pin.json`). Each trial provisions a fres
 checkout, runs the arm, and is scored by the same oracle. Re-scoring an existing
 tree (`harness/rescore.py`) is deterministic and cheap, decoupled from the
 expensive agent conversions.
+
+## Cite
+
+If you use this work, please cite the archived release:
+
+```bibtex
+@software{palmer_2026_durable_state,
+  author    = {Palmer, Cary},
+  title     = {{State, Not Tokens: Repository-Scale Agent
+               Reasoning Is Bound by State Architecture}},
+  year      = {2026},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.20709566},
+  url       = {https://doi.org/10.5281/zenodo.20709566}
+}
+```
 
 ## License
 
