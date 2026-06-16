@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>State, Not Tokens — Cary Palmer</title>
+<meta name="description" content="A controlled study showing repository-scale agent reasoning is bound by state architecture, not nominal context length." />
+<meta property="og:title" content="State, Not Tokens: Repository-Scale Agent Reasoning Is Bound by State Architecture" />
+<meta property="og:description" content="A controlled study showing repository-scale agent performance is bound by state architecture, not context-window size." />
+<meta property="og:type" content="article" />
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --muted: #5c5c5c;
+    --line: #e2e2e2;
+    --accent: #b31b1b;
+    --bg: #fbfbf9;
+    --card: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 56px 22px 80px; }
+  header { border-bottom: 1px solid var(--line); padding-bottom: 28px; margin-bottom: 32px; }
+  .eyebrow {
+    font-size: 13px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--accent); font-weight: 700; margin: 0 0 14px;
+  }
+  h1 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 32px; line-height: 1.22; margin: 0 0 18px; font-weight: 700;
+  }
+  .byline { font-size: 16px; color: var(--muted); margin: 0 0 18px; }
+  .byline a { color: var(--accent); text-decoration: none; }
+  .byline a:hover { text-decoration: underline; }
+  .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .badges img { height: 20px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 26px 0 4px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 18px; border-radius: 8px; font-size: 15px; font-weight: 600;
+    text-decoration: none; border: 1px solid var(--line); transition: all .15s ease;
+  }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn.primary:hover { background: #8f1414; }
+  .btn.ghost { background: var(--card); color: var(--ink); }
+  .btn.ghost:hover { border-color: #bdbdbd; background: #f3f3f1; }
+  h2 {
+    font-family: Georgia, serif; font-size: 21px; margin: 40px 0 12px;
+  }
+  .abstract { font-size: 16.5px; color: #2a2a2a; }
+  .abstract strong { color: var(--ink); }
+  .findings { list-style: none; padding: 0; margin: 8px 0 0; }
+  .findings li {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 16px 18px; margin-bottom: 12px;
+  }
+  .findings li b { color: var(--accent); }
+  .pdf-frame {
+    width: 100%; height: 920px; border: 1px solid var(--line); border-radius: 10px;
+    margin-top: 14px; background: #fff;
+  }
+  footer {
+    margin-top: 48px; padding-top: 22px; border-top: 1px solid var(--line);
+    font-size: 14px; color: var(--muted);
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .92em; background: #f0efec; padding: 1px 5px; border-radius: 4px; }
+  @media (max-width: 600px) {
+    h1 { font-size: 26px; }
+    .pdf-frame { height: 560px; }
+    .wrap { padding-top: 36px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Preprint · Independent Research</p>
+    <h1>State, Not Tokens: Repository-Scale Agent Reasoning Is Bound by State Architecture</h1>
+    <p class="byline">
+      <strong>Cary Palmer</strong> — Independent Researcher, Dallas, TX<br />
+      <a href="https://github.com/professorpalmer">GitHub</a> ·
+      <a href="https://www.linkedin.com/in/cary-palmer-a30557175/">LinkedIn</a>
+    </p>
+    <div class="badges">
+      <a href="https://doi.org/10.5281/zenodo.20709566"><img alt="DOI" src="https://zenodo.org/badge/DOI/10.5281/zenodo.20709566.svg" /></a>
+      <img alt="License CC BY 4.0" src="https://img.shields.io/badge/paper%20%26%20data-CC%20BY%204.0-lightgrey.svg" />
+      <img alt="Code MIT" src="https://img.shields.io/badge/code-MIT-blue.svg" />
+    </div>
+    <div class="actions">
+      <a class="btn primary" href="paper.pdf">Read the PDF</a>
+      <a class="btn ghost" href="paper.pdf" download>Download</a>
+      <a class="btn ghost" href="https://github.com/professorpalmer/durable-state-vs-context">Code</a>
+      <a class="btn ghost" href="https://huggingface.co/datasets/CaryPalmer/durable-vs-context-trials">Dataset</a>
+      <a class="btn ghost" href="https://doi.org/10.5281/zenodo.20709566">Cite (DOI)</a>
+    </div>
+  </header>
+
+  <h2>Abstract</h2>
+  <p class="abstract">
+    The agent community has largely treated repository-scale forgetting as a
+    <em>context-window</em> problem: bigger windows (8k &rarr; 128k &rarr; 1M) are expected to
+    yield better whole-repo reasoning. We argue this is a misdiagnosis. Using a hard,
+    machine-checkable task (strict JavaScript&rarr;TypeScript migration of real OSS
+    repositories under an unforgeable oracle: strict <code>tsc</code>, immutable test
+    suites, mandatory <code>.js</code>&rarr;<code>.ts</code> replacement, zero
+    type-escape-hatches), we vary a single axis: <strong>how state flows between bounded
+    workers</strong>. Three arms hold model, tools, scaffold, and oracle constant: a
+    single-context <em>monolith</em>, a <em>durable</em> arm that accumulates each completed
+    dependency layer as a committed artifact on a shared evolving tree, and a
+    <em>stateless-RAG</em> arm whose per-file workers retrieve context but never see each
+    other's results. The contribution is a reframing &mdash; <strong>state is an asset, not a
+    prompt</strong> &mdash; with controls that isolate which capability actually matters.
+  </p>
+
+  <h2>Key findings</h2>
+  <ul class="findings">
+    <li><b>The naive context thesis is refuted, then reframed.</b> A single navigating
+      agent cleanly migrates up to <strong>240</strong> interdependent modules &mdash; it does
+      <em>not</em> break where the context-window thesis predicts. It cracks at the full
+      <strong>364</strong>-module tree by <em>capacity</em>, not window overflow.</li>
+    <li><b>Durable accumulation &gt; stateless retrieval.</b> Same model, tools, and
+      decomposition &mdash; only accumulation differs. RAG's blind workers emit code that
+      won't compile (<code>TS2451</code> conflicts appear <em>only</em> in RAG); durable
+      reaches a clean <code>tsc --strict</code> tree where the monolith has no repair seam.</li>
+    <li><b>Two structural properties no transcript can match.</b> Interruption-resumable
+      consistent checkpoints (durable preserves 70.8% and resumes to PASS vs. monolith 0%),
+      and <strong>zero-marginal-cost re-query</strong> &mdash; recalling a materialized discovery
+      is a database read, not an LLM call.</li>
+    <li><b>An honestly localized limit.</b> Parallel headroom <em>grows</em> with repo size,
+      but usable concurrency is capped at K&approx;10&ndash;12 on the Cursor backend; a second
+      backend (Claude Code) sustains 100% to C=32, so the cap is a property of the serving
+      platform, not of durable state.</li>
+  </ul>
+
+  <h2>Paper</h2>
+  <iframe class="pdf-frame" src="paper.pdf" title="Paper PDF"></iframe>
+
+  <footer>
+    Archived release with a citable DOI:
+    <a href="https://doi.org/10.5281/zenodo.20709566">10.5281/zenodo.20709566</a>.
+    Code MIT; paper &amp; data CC&nbsp;BY&nbsp;4.0.
+  </footer>
+</div>
+</body>
+</html>
