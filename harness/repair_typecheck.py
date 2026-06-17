@@ -54,7 +54,7 @@ def _repair_prompt(ts_file: str, errors: list[str], converted_deps: list[str]) -
 
 
 def repair(trial_dir: Path, sub: str, state_dir: Path, timeout: int, max_workers: int,
-           max_iters: int) -> dict:
+           max_iters: int, model: str | None = None) -> dict:
     tree = trial_dir / sub
     sel = json.loads((trial_dir / "scope.json").read_text())
     scope_ts = {f[:-3] + ".ts" for f in sel["scope"]}
@@ -82,7 +82,7 @@ def repair(trial_dir: Path, sub: str, state_dir: Path, timeout: int, max_workers
             wk = trial_dir / ("rk_" + tsf.replace("/", "_"))
             R._lightcopy(tree, wk)
             deps = [d for d in direct.get(jsf, []) if d in converted]
-            R._run_worker(_repair_prompt(tsf, in_scope_bad[tsf], deps), wk, state_dir, None, timeout)
+            R._run_worker(_repair_prompt(tsf, in_scope_bad[tsf], deps), wk, state_dir, model, timeout)
             fixed_ts = (wk / tsf).read_text(encoding="utf-8", errors="replace") if (wk / tsf).is_file() else None
             shutil.rmtree(wk, ignore_errors=True)
             return tsf, fixed_ts
@@ -122,9 +122,12 @@ def main() -> int:
     ap.add_argument("--timeout", type=int, default=1200)
     ap.add_argument("--max-workers", type=int, default=3)
     ap.add_argument("--max-iters", type=int, default=3)
+    ap.add_argument("--backend", default="cursor", choices=["cursor", "claude"])
+    ap.add_argument("--model", default=None)
     a = ap.parse_args()
+    R.BACKEND = a.backend
     out = repair(Path(a.trial_dir).resolve(), a.sub, Path(a.state_dir),
-                 a.timeout, a.max_workers, a.max_iters)
+                 a.timeout, a.max_workers, a.max_iters, a.model)
     print(json.dumps(out, indent=2))
     return 0 if out["clean"] else 1
 

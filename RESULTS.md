@@ -26,7 +26,7 @@ Verdicts on the **primary static axis** (`typecheck_strict` + `escape_hatches`);
 | jsdom-S | 8   | ✓ (s1,s2) | ✓ (s1,s2) | ✗ 0/3 (s0,s1,s2 — TS2451 redeclaration) |
 | jsdom-M | 24  | ✓ (s1,s2) | ✓ (s1,s2) | ✗ 0/2 (typecheck) |
 | jsdom-L | 60  | ✓ | ✓ all seeds (s1: post-repair 2 calls/101s; s2: raw clean) | ✗ 0/3 (TS2451 conflicts) |
-| jsdom-XL| 120 | ✓ | ✓ (0 err, 0 hatches, 120 converted)¹ | ✗ (≈290 err; TS2451 ×122 — conflicts grow with scope) |
+| jsdom-XL| 120 | ✓ s0 / ✗ s1 (seed-fragile) | ✓ 2/2 (s0,s1: 0 err, 0 hatches, 120 converted)¹ | ✗ 0/2 (≈290 err; TS2451 ×122 — conflicts grow with scope) |
 | jsdom-XXL| 240 | ✓ | — | — |
 | jsdom-FULL| 364 | **✗ (16 errors, no repair seam)** | **✓ post-repair (raw 5 → 4 calls/258s → 0)**¹ | — |
 

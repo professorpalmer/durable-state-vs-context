@@ -245,7 +245,7 @@ deliberately honest, narrower claim.
 | jsdom-S (8) | **PASS** (seeds 1,2: 2/2) | — | **FAIL** (seeds 0,1,2: 0/3) |
 | jsdom-M (24) | **PASS** (seeds 1,2: 2/2) | — | **FAIL** (seeds 1,2: 0/2) |
 | jsdom-L (60) | localized gaps (s1: 1 err) | **CLEAN** (2 calls, 1.7 min) | **FAIL** (structural conflicts) |
-| jsdom-XL (120) | **CLEAN** (typecheck, 0 hatches)¹ | — | **FAIL** (≈290 type errors; `TS2451` ×122) |
+| jsdom-XL (120) | **CLEAN** (typecheck, 0 hatches; seeds 0,1: 2/2)¹ | — | **FAIL** (seeds 0,1: 0/2; ≈290 type errors; `TS2451` ×122) |
 
 Same scope, same model, same tools; only **accumulation** differs. The honest
 shape: at small scope (S, M) durable's *first pass* is clean while RAG fails at
@@ -258,6 +258,13 @@ sharpens at the largest scope**: at XL (120 modules) durable's static axis is CL
 errors, dominated by `TS2451` redeclaration conflicts that scale from ×10 at small
 scope to **×122** at XL. The durable–RAG gap therefore *widens* with scale rather
 than closing — the opposite of what a "retrieval is enough" account predicts.
+
+These XL outcomes replicate across two independent seeds: durable is typecheck-CLEAN
+with zero hatches at both (2/2) and RAG fails at both (0/2). The single-context
+monolith, by contrast, is seed-fragile at this scale — typecheck-clean at seed 0 but
+failing strict typecheck at seed 1 — consistent with a capacity limit whose onset
+depends on which modules a given scope happens to draw, not a fixed module count
+(§4.1). Durable is the only arm that is consistently clean across seeds at XL.
 ¹At XL the durable runtime gate
 is confounded by jsdom's own build system (§6); we report the unconfounded static
 axis (`tsc` clean, 0 hatches, all 120 converted).
@@ -310,6 +317,17 @@ zero known-good modules: the entire single shot is lost. This is a *structural*
 property of single-transcript execution, not a tuning artifact: there is no
 mechanism by which a monolith can expose a consistent intermediate checkpoint.
 
+This resumability reproduces on a second serving backend and at the largest scope. A
+full XL(120) durable run on the Claude Code backend absorbed several real process
+interruptions over a multi-hour run; each time it resumed from the last committed
+dependency layer and converted all 120 modules with zero rework (36 → 50 → 117 → 120
+across restarts). The checkpoint property is therefore a structural consequence of
+committing to a shared tree, independent of the worker backend. (On Claude the
+per-file conversions integrated with more cross-file type debt than on Cursor, so the
+post-conversion repair did not reach a fully clean tree within the iteration budget;
+we report the backend-independent property — interruption-resumable conversion —
+rather than an absolute clean endpoint on that backend.)
+
 ### 4.6 Hypothesis scorecard (calibrated, including refutations)
 We pre-registered five hypotheses and report verdicts honestly, including where
 our own headline hypothesis was *refuted*, which sharpened the contribution.
@@ -319,7 +337,7 @@ our own headline hypothesis was *refuted*, which sharpened the contribution.
 | **H1** | a single transcript's pass-rate *collapses* once scope exceeds the window | **REFUTED (naive form) → REFRAMED** | monolith clean to **240** modules by navigating the filesystem; it does crack at **364**, but by *capacity* (un-narrowed types), not window-overflow. The binding constraint is **state architecture, not nominal context length**: the paper's actual thesis. |
 | **H2** | durable accumulation > stateless retrieval, same decomposition+retrieval | **SUPPORTED** | durable PASS vs RAG FAIL at S (0/3 seeds), M, L; at XL durable typecheck-CLEAN vs RAG ≈290 errors (`TS2451`×122). Only accumulation differs. |
 | **H3** | failure mechanism differs by architecture | **SUPPORTED (revised)** | not generic "context overflow": RAG fails by *conflict* (`TS2451` only in RAG), monolith by *capacity* (`TS2571` only in monolith), durable by neither. |
-| **H4** | durable resumes near-free under interruption; transcript must restart | **SUPPORTED** | durable 70.8% preserved + resume→oracle PASS; monolith 0% preserved, full redo. |
+| **H4** | durable resumes near-free under interruption; transcript must restart | **SUPPORTED** | durable 70.8% preserved + resume→oracle PASS; monolith 0% preserved, full redo. Reproduced on a second backend (Claude Code) at XL: a full 120-module run absorbed several real interruptions and resumed to 120/120 with zero rework. |
 | **H5** | a larger-window model only postpones transcript collapse | **NOT TESTED / MOOT** | model held constant by design; the breaking-point analysis shows window was not the binding constraint, so the larger-window framing is superseded by H1's reframing. |
 
 That H1's naive form failed is the most important honesty in this paper: it is *why*
