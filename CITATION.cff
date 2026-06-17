@@ -10,8 +10,8 @@ license: CC-BY-4.0
 repository-code: "https://github.com/professorpalmer/durable-state-vs-context"
 url: "https://professorpalmer.github.io/durable-state-vs-context/"
 doi: "10.5281/zenodo.20709565"
-version: "1.1"
-date-released: "2026-06-16"
+version: "1.2"
+date-released: "2026-06-17"
 keywords:
   - coding agents
   - durable state
